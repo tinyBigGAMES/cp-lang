@@ -80,3 +80,16 @@ __recovery/
 
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
+
+# E-Lang
+_checkpoint.cmd
+changes-diff.cmd
+changes.diff
+zip_latest_commit.cmd
+src/todo.md
+!bin/LLVM-C.dll
+!bin/lld-link.exe
+!bin/res/src/*.e
+checkpoint.zip
+checkpoint_base.zip
+CPascal-main.zip

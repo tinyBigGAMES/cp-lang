@@ -1,0 +1,191 @@
+(* E Language Grammar - C99 with Pascal Syntax, Mandatory Main Function *)
+
+program ::= translation_unit main_function
+
+translation_unit ::= (preprocessor_directive | declaration)*
+
+main_function ::= "function" "main" "(" ")" ":" "int32" statement_block
+
+(* Preprocessor Directives *)
+preprocessor_directive ::= "#include " ("<" IDENTIFIER ">" | STRING_LITERAL)
+                         | "#includepath " STRING_LITERAL
+                         | "#define " IDENTIFIER replacement_list?
+                         | "#undef " IDENTIFIER
+                         | "#ifdef " IDENTIFIER
+                         | "#ifndef " IDENTIFIER
+                         | "#if " constant_expression
+                         | "#elif " constant_expression
+                         | "#else"
+                         | "#endif"
+                         | "#error " token_sequence?
+                         | "#pragma " token_sequence?
+                         | "#line " INTEGER_LITERAL STRING_LITERAL?
+
+replacement_list ::= token_sequence
+token_sequence ::= [^\n]+
+constant_expression ::= expression
+
+declaration_list ::= declaration*
+
+declaration ::= variable_declaration
+              | function_declaration  
+              | type_declaration
+              | statement
+
+(* Variable Declarations - can appear anywhere like C *)
+variable_declaration ::= "var" identifier_list ":" type_spec init_value? ";"
+
+identifier_list ::= IDENTIFIER ("," IDENTIFIER)*
+
+init_value ::= ":=" expression
+
+(* Type Declarations *)
+type_declaration ::= "type" IDENTIFIER "=" type_spec ";"
+
+(* Function Declarations *)
+function_declaration ::= function_header statement_block
+                       | function_header "external" STRING_LITERAL ";"
+
+function_header ::= "function" IDENTIFIER parameter_list ":" type_spec
+                  | "procedure" IDENTIFIER parameter_list
+
+parameter_list ::= "(" param_def_list? ")"
+
+param_def_list ::= param_def ("," param_def)* ("," "...")?  
+                 | "..."
+
+param_def ::= param_modifier? identifier_list ":" type_spec
+
+param_modifier ::= "ref" | "const"
+
+(* No separate return_type rule needed - incorporated into function_header *)
+
+(* Type Specifications *)
+type_spec ::= basic_type
+            | pointer_type
+            | array_type  
+            | record_type
+            | function_type
+            | IDENTIFIER
+
+basic_type ::= "int" | "char" | "bool" | "float" | "double"
+             | "int8" | "int16" | "int32" | "int64"
+             | "uint8" | "uint16" | "uint32" | "uint64"
+
+pointer_type ::= "^" type_spec
+
+array_type ::= "array" "[" expression? "]" "of" type_spec
+
+record_type ::= "record" field_list "end"
+
+field_list ::= field_def (";" field_def)* ";"?
+
+field_def ::= identifier_list ":" type_spec
+
+function_type ::= "function" parameter_list return_type
+                | "procedure" parameter_list
+
+(* Statements *)
+statement_block ::= "begin" statement_list "end"
+
+statement_list ::= statement*
+
+statement ::= assignment_statement ";"
+            | call_statement ";"
+            | if_statement
+            | while_statement
+            | for_statement
+            | repeat_statement
+            | case_statement
+            | "break" ";"
+            | "continue" ";"
+            | return_statement ";"
+            | goto_statement ";"
+            | label_statement
+            | statement_block
+            | variable_declaration
+
+assignment_statement ::= lvalue ":=" expression
+
+call_statement ::= expression
+
+if_statement ::= "if" expression "then" statement ("else" statement)?
+
+while_statement ::= "while" expression "do" statement
+
+for_statement ::= "for" IDENTIFIER ":=" expression ("to" | "downto") expression "do" statement
+                | "for" assignment_statement ";" expression ";" assignment_statement "do" statement
+
+repeat_statement ::= "repeat" statement_list "until" expression
+
+case_statement ::= "case" expression "of" case_list case_else? "end"
+
+case_list ::= case_item*
+
+case_item ::= case_labels ":" statement_list
+
+case_labels ::= case_label ("," case_label)*
+
+case_label ::= expression (".." expression)?
+
+case_else ::= "else" statement_list
+
+return_statement ::= "return" expression?
+
+goto_statement ::= "goto" IDENTIFIER
+
+label_statement ::= IDENTIFIER ":"
+
+(* Expressions *)
+expression ::= conditional_expression
+
+conditional_expression ::= logical_or_expression ("?" expression ":" conditional_expression)?
+
+logical_or_expression ::= logical_and_expression ("or" logical_and_expression)*
+
+logical_and_expression ::= equality_expression ("and" equality_expression)*
+
+equality_expression ::= relational_expression (("=" | "<>") relational_expression)*
+
+relational_expression ::= additive_expression (("<" | ">" | "<=" | ">=") additive_expression)*
+
+additive_expression ::= multiplicative_expression (("+" | "-") multiplicative_expression)*
+
+multiplicative_expression ::= unary_expression (("*" | "/" | "div" | "mod") unary_expression)*
+
+unary_expression ::= postfix_expression
+                   | ("+" | "-" | "not" | "@" | "^") unary_expression
+                   | "sizeof" "(" type_spec ")"
+
+postfix_expression ::= primary_expression postfix_operator*
+
+postfix_operator ::= "[" expression "]"
+                   | "(" argument_list? ")"
+                   | "." IDENTIFIER
+                   | "^"
+
+primary_expression ::= IDENTIFIER
+                     | constant
+                     | string_literal
+                     | "(" expression ")"
+
+argument_list ::= expression ("," expression)*
+
+lvalue ::= IDENTIFIER
+         | lvalue "[" expression "]"
+         | lvalue "." IDENTIFIER  
+         | lvalue "^"
+         | "(" lvalue ")"
+
+constant ::= INTEGER_LITERAL | REAL_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL
+
+(* Comments - C-style *)
+COMMENT ::= "//" [^\n]* "\n"
+          | "/*" .* "*/"
+
+BOOLEAN_LITERAL ::= "true" | "false"
+IDENTIFIER ::= [a-zA-Z_][a-zA-Z0-9_]*
+INTEGER_LITERAL ::= [0-9]+ | "0x"[0-9a-fA-F]+ | "0"[0-7]+
+REAL_LITERAL ::= [0-9]+"."[0-9]+([eE][+-]?[0-9]+)?
+CHAR_LITERAL ::= "'"[^']"'"
+STRING_LITERAL ::= '"'[^"]*'"'
