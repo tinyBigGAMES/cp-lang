@@ -63,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- **Merge branch 'main' of https://github.com/tinyBigGAMES/cp-lang** (2025-08-21 – jarroddavis68)
+
+- **Update .gitignore** (2025-08-21 – jarroddavis68)
+
 - **Update LICENSE** (2025-08-17 – Jarrod Davis)
 
 - **Initial commit** (2025-08-17 – Jarrod Davis)
