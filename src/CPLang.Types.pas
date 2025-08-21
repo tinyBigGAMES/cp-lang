@@ -1,31 +1,35 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Types;
+unit CPLang.Types;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Parser,
-  ELang.Errors;
+  CPLang.Common,
+  CPLang.Parser,
+  CPLang.Errors;
 
 type
-  { TELTypeKind }
-  TELTypeKind = (
+  { TCPTypeKind }
+  TCPTypeKind = (
     tkBasic,
     tkPointer,
     tkArray,
@@ -35,161 +39,160 @@ type
     tkAlias
   );
 
-  { TELBasicType }
-  TELBasicType = (
+  { TCPBasicType }
+  TCPBasicType = (
     btInt, btChar, btBool, btFloat, btDouble,
     btInt8, btInt16, btInt32, btInt64,
     btUInt8, btUInt16, btUInt32, btUInt64
   );
 
-  { TELType }
-  TELType = class
+  { TCPType }
+  TCPType = class
   private
-    FKind: TELTypeKind;
+    FKind: TCPTypeKind;
     FName: string;
     FSize: Integer;
     
   public
-    constructor Create(const AKind: TELTypeKind; const AName: string); virtual;
+    constructor Create(const AKind: TCPTypeKind; const AName: string); virtual;
     
-    function IsCompatible(const AOther: TELType): Boolean; virtual;
+    function IsCompatible(const AOther: TCPType): Boolean; virtual;
     function GetTypeName(): string; virtual;
     function GetSize(): Integer; virtual;
     
-    property Kind: TELTypeKind read FKind;
+    property Kind: TCPTypeKind read FKind;
     property TypeName: string read FName;
     property Size: Integer read FSize;
   end;
 
-  { TELBasicTypeInfo }
-  TELBasicTypeInfo = class(TELType)
+  { TCPBasicTypeInfo }
+  TCPBasicTypeInfo = class(TCPType)
   private
-    FBasicType: TELBasicType;
+    FBasicType: TCPBasicType;
     
   public
-    constructor Create(const ABasicType: TELBasicType); reintroduce;
+    constructor Create(const ABasicType: TCPBasicType); reintroduce;
     
-    function IsCompatible(const AOther: TELType): Boolean; override;
+    function IsCompatible(const AOther: TCPType): Boolean; override;
     function GetTypeName(): string; override;
     function GetSize(): Integer; override;
     
-    property BasicType: TELBasicType read FBasicType;
+    property BasicType: TCPBasicType read FBasicType;
   end;
 
-  { TELPointerType }
-  TELPointerType = class(TELType)
+  { TCPPointerType }
+  TCPPointerType = class(TCPType)
   private
-    FTargetType: TELType;
+    FTargetType: TCPType;
     
   public
-    constructor Create(const ATargetType: TELType); reintroduce;
+    constructor Create(const ATargetType: TCPType); reintroduce;
     destructor Destroy(); override;
     
-    function IsCompatible(const AOther: TELType): Boolean; override;
+    function IsCompatible(const AOther: TCPType): Boolean; override;
     function GetTypeName(): string; override;
     function GetSize(): Integer; override;
     
-    property TargetType: TELType read FTargetType;
+    property TargetType: TCPType read FTargetType;
   end;
 
-  { TELArrayType }
-  TELArrayType = class(TELType)
+  { TCPArrayType }
+  TCPArrayType = class(TCPType)
   private
-    FElementType: TELType;
+    FElementType: TCPType;
     FElementCount: Integer; // -1 for dynamic arrays
     
   public
-    constructor Create(const AElementType: TELType; const AElementCount: Integer = -1); reintroduce;
+    constructor Create(const AElementType: TCPType; const AElementCount: Integer = -1); reintroduce;
     destructor Destroy(); override;
     
-    function IsCompatible(const AOther: TELType): Boolean; override;
+    function IsCompatible(const AOther: TCPType): Boolean; override;
     function GetTypeName(): string; override;
     function GetSize(): Integer; override;
     
-    property ElementType: TELType read FElementType;
+    property ElementType: TCPType read FElementType;
     property ElementCount: Integer read FElementCount;
   end;
 
-  { TELRecordField }
-  TELRecordField = record
+  { TCPRecordField }
+  TCPRecordField = record
     FieldName: string;
-    FieldType: TELType;
+    FieldType: TCPType;
     Offset: Integer;
   end;
 
-  { TELRecordType }
-  TELRecordType = class(TELType)
+  { TCPRecordType }
+  TCPRecordType = class(TCPType)
   private
-    FFields: TArray<TELRecordField>;
+    FFields: TArray<TCPRecordField>;
     FFieldMap: TDictionary<string, Integer>;
     
   public
     constructor Create(); reintroduce;
     destructor Destroy(); override;
     
-    procedure AddField(const AName: string; const AType: TELType);
-    function GetField(const AName: string): TELRecordField;
+    procedure AddField(const AName: string; const AType: TCPType);
+    function GetField(const AName: string): TCPRecordField;
     function HasField(const AName: string): Boolean;
     function GetFieldOffset(const AName: string): Integer;
     
-    function IsCompatible(const AOther: TELType): Boolean; override;
+    function IsCompatible(const AOther: TCPType): Boolean; override;
     function GetTypeName(): string; override;
     function GetSize(): Integer; override;
     
-    property Fields: TArray<TELRecordField> read FFields;
+    property Fields: TArray<TCPRecordField> read FFields;
   end;
 
-  { TELFunctionType }
-  TELFunctionType = class(TELType)
+  { TCPFunctionType }
+  TCPFunctionType = class(TCPType)
   private
-    FParameterTypes: TArray<TELType>;
-    FReturnType: TELType; // nil for procedures
+    FParameterTypes: TArray<TCPType>;
+    FReturnType: TCPType; // nil for procedures
     FIsVariadic: Boolean;
     
   public
-    constructor Create(const AParameterTypes: TArray<TELType>; const AReturnType: TELType = nil; const AIsVariadic: Boolean = False); reintroduce;
+    constructor Create(const AParameterTypes: TArray<TCPType>; const AReturnType: TCPType = nil; const AIsVariadic: Boolean = False); reintroduce;
     destructor Destroy(); override;
     
-    function IsCompatible(const AOther: TELType): Boolean; override;
+    function IsCompatible(const AOther: TCPType): Boolean; override;
     function GetTypeName(): string; override;
     function GetSize(): Integer; override;
     
-    property ParameterTypes: TArray<TELType> read FParameterTypes;
-    property ReturnType: TELType read FReturnType;
+    property ParameterTypes: TArray<TCPType> read FParameterTypes;
+    property ReturnType: TCPType read FReturnType;
     property IsVariadic: Boolean read FIsVariadic;
   end;
 
-  { TELTypeManager }
-  TELTypeManager = class(TELObject)
+  { TCPTypeManager }
+  TCPTypeManager = class
   private
-    FTypes: TObjectDictionary<string, TELType>;
-    FBasicTypes: TDictionary<TELBasicType, TELBasicTypeInfo>;
+    FTypes: TObjectDictionary<string, TCPType>;
+    FBasicTypes: TDictionary<TCPBasicType, TCPBasicTypeInfo>;
     
     procedure InitializeBasicTypes();
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
-    function GetBasicType(const ABasicType: TELBasicType): TELBasicTypeInfo;
-    function GetTypeByName(const ATypeName: string): TELType;
-    function CreatePointerType(const ATargetType: TELType): TELPointerType;
-    function CreateArrayType(const AElementType: TELType; const AElementCount: Integer = -1): TELArrayType;
-    function CreateRecordType(const AName: string): TELRecordType;
-    function CreateFunctionType(const AParameterTypes: TArray<TELType>; const AReturnType: TELType = nil; const AIsVariadic: Boolean = False): TELFunctionType;
+    function GetBasicType(const ABasicType: TCPBasicType): TCPBasicTypeInfo;
+    function GetTypeByName(const ATypeName: string): TCPType;
+    function CreatePointerType(const ATargetType: TCPType): TCPPointerType;
+    function CreateArrayType(const AElementType: TCPType; const AElementCount: Integer = -1): TCPArrayType;
+    function CreateRecordType(const AName: string): TCPRecordType;
+    function CreateFunctionType(const AParameterTypes: TArray<TCPType>; const AReturnType: TCPType = nil; const AIsVariadic: Boolean = False): TCPFunctionType;
     
-    procedure RegisterType(const AName: string; const AType: TELType);
-    function ResolveType(const ATypeNode: TELASTNode): TELType;
+    procedure RegisterType(const AName: string; const AType: TCPType);
+    function ResolveType(const ATypeNode: TCPASTNode): TCPType;
     
-    function AreTypesCompatible(const AType1, AType2: TELType): Boolean;
-    function GetCommonType(const AType1, AType2: TELType): TELType;
+    function AreTypesCompatible(const AType1, AType2: TCPType): Boolean;
+    function GetCommonType(const AType1, AType2: TCPType): TCPType;
   end;
 
 implementation
 
-{ TELType }
-
-constructor TELType.Create(const AKind: TELTypeKind; const AName: string);
+{ TCPType }
+constructor TCPType.Create(const AKind: TCPTypeKind; const AName: string);
 begin
   inherited Create();
   FKind := AKind;
@@ -197,24 +200,23 @@ begin
   FSize := 0;
 end;
 
-function TELType.IsCompatible(const AOther: TELType): Boolean;
+function TCPType.IsCompatible(const AOther: TCPType): Boolean;
 begin
   Result := (Self = AOther) or (Self.ClassName = AOther.ClassName);
 end;
 
-function TELType.GetTypeName(): string;
+function TCPType.GetTypeName(): string;
 begin
   Result := FName;
 end;
 
-function TELType.GetSize(): Integer;
+function TCPType.GetSize(): Integer;
 begin
   Result := FSize;
 end;
 
-{ TELBasicTypeInfo }
-
-constructor TELBasicTypeInfo.Create(const ABasicType: TELBasicType);
+{ TCPBasicTypeInfo }
+constructor TCPBasicTypeInfo.Create(const ABasicType: TCPBasicType);
 begin
   inherited Create(tkBasic, '');
   FBasicType := ABasicType;
@@ -235,60 +237,58 @@ begin
   end;
 end;
 
-function TELBasicTypeInfo.IsCompatible(const AOther: TELType): Boolean;
+function TCPBasicTypeInfo.IsCompatible(const AOther: TCPType): Boolean;
 begin
-  if AOther is TELBasicTypeInfo then
-    Result := FBasicType = TELBasicTypeInfo(AOther).FBasicType
+  if AOther is TCPBasicTypeInfo then
+    Result := FBasicType = TCPBasicTypeInfo(AOther).FBasicType
   else
     Result := False;
 end;
 
-function TELBasicTypeInfo.GetTypeName(): string;
+function TCPBasicTypeInfo.GetTypeName(): string;
 begin
   Result := FName;
 end;
 
-function TELBasicTypeInfo.GetSize(): Integer;
+function TCPBasicTypeInfo.GetSize(): Integer;
 begin
   Result := FSize;
 end;
 
-{ TELPointerType }
-
-constructor TELPointerType.Create(const ATargetType: TELType);
+{ TCPPointerType }
+constructor TCPPointerType.Create(const ATargetType: TCPType);
 begin
   inherited Create(tkPointer, '^' + ATargetType.GetTypeName());
   FTargetType := ATargetType;
   FSize := 8; // 64-bit pointer
 end;
 
-destructor TELPointerType.Destroy();
+destructor TCPPointerType.Destroy();
 begin
   // Note: We don't free FTargetType as it's managed by TypeManager
   inherited;
 end;
 
-function TELPointerType.IsCompatible(const AOther: TELType): Boolean;
+function TCPPointerType.IsCompatible(const AOther: TCPType): Boolean;
 begin
-  if AOther is TELPointerType then
-    Result := FTargetType.IsCompatible(TELPointerType(AOther).FTargetType)
+  if AOther is TCPPointerType then
+    Result := FTargetType.IsCompatible(TCPPointerType(AOther).FTargetType)
   else
     Result := False;
 end;
 
-function TELPointerType.GetTypeName(): string;
+function TCPPointerType.GetTypeName(): string;
 begin
   Result := '^' + FTargetType.GetTypeName();
 end;
 
-function TELPointerType.GetSize(): Integer;
+function TCPPointerType.GetSize(): Integer;
 begin
   Result := 8; // 64-bit pointer
 end;
 
-{ TELArrayType }
-
-constructor TELArrayType.Create(const AElementType: TELType; const AElementCount: Integer);
+{ TCPArrayType }
+constructor TCPArrayType.Create(const AElementType: TCPType; const AElementCount: Integer);
 begin
   if AElementCount >= 0 then
     inherited Create(tkArray, Format('array[%d] of %s', [AElementCount, AElementType.GetTypeName()]))
@@ -304,24 +304,24 @@ begin
     FSize := 8; // Pointer to dynamic array
 end;
 
-destructor TELArrayType.Destroy();
+destructor TCPArrayType.Destroy();
 begin
   // Note: We don't free FElementType as it's managed by TypeManager
   inherited;
 end;
 
-function TELArrayType.IsCompatible(const AOther: TELType): Boolean;
+function TCPArrayType.IsCompatible(const AOther: TCPType): Boolean;
 begin
-  if AOther is TELArrayType then
+  if AOther is TCPArrayType then
   begin
-    Result := FElementType.IsCompatible(TELArrayType(AOther).FElementType) and
-              (FElementCount = TELArrayType(AOther).FElementCount);
+    Result := FElementType.IsCompatible(TCPArrayType(AOther).FElementType) and
+              (FElementCount = TCPArrayType(AOther).FElementCount);
   end
   else
     Result := False;
 end;
 
-function TELArrayType.GetTypeName(): string;
+function TCPArrayType.GetTypeName(): string;
 begin
   if FElementCount >= 0 then
     Result := Format('array[%d] of %s', [FElementCount, FElementType.GetTypeName()])
@@ -329,14 +329,13 @@ begin
     Result := Format('array[] of %s', [FElementType.GetTypeName()]);
 end;
 
-function TELArrayType.GetSize(): Integer;
+function TCPArrayType.GetSize(): Integer;
 begin
   Result := FSize;
 end;
 
-{ TELRecordType }
-
-constructor TELRecordType.Create();
+{ TCPRecordType }
+constructor TCPRecordType.Create();
 begin
   inherited Create(tkRecord, 'record');
   SetLength(FFields, 0);
@@ -344,16 +343,16 @@ begin
   FSize := 0;
 end;
 
-destructor TELRecordType.Destroy();
+destructor TCPRecordType.Destroy();
 begin
   FFieldMap.Free();
   inherited;
 end;
 
-procedure TELRecordType.AddField(const AName: string; const AType: TELType);
+procedure TCPRecordType.AddField(const AName: string; const AType: TCPType);
 var
   LFieldIndex: Integer;
-  LField: TELRecordField;
+  LField: TCPRecordField;
 begin
   LFieldIndex := Length(FFields);
   SetLength(FFields, LFieldIndex + 1);
@@ -369,48 +368,47 @@ begin
   FSize := FSize + AType.GetSize();
 end;
 
-function TELRecordType.GetField(const AName: string): TELRecordField;
+function TCPRecordType.GetField(const AName: string): TCPRecordField;
 var
   LIndex: Integer;
 begin
   if FFieldMap.TryGetValue(AName, LIndex) then
     Result := FFields[LIndex]
   else
-    raise EELException.Create('Field "%s" not found in record', [AName]);
+    raise ECPException.Create('Field "%s" not found in record', [AName]);
 end;
 
-function TELRecordType.HasField(const AName: string): Boolean;
+function TCPRecordType.HasField(const AName: string): Boolean;
 begin
   Result := FFieldMap.ContainsKey(AName);
 end;
 
-function TELRecordType.GetFieldOffset(const AName: string): Integer;
+function TCPRecordType.GetFieldOffset(const AName: string): Integer;
 var
-  LField: TELRecordField;
+  LField: TCPRecordField;
 begin
   LField := GetField(AName);
   Result := LField.Offset;
 end;
 
-function TELRecordType.IsCompatible(const AOther: TELType): Boolean;
+function TCPRecordType.IsCompatible(const AOther: TCPType): Boolean;
 begin
   // Record types are compatible only if they're the same instance
   Result := Self = AOther;
 end;
 
-function TELRecordType.GetTypeName(): string;
+function TCPRecordType.GetTypeName(): string;
 begin
   Result := 'record';
 end;
 
-function TELRecordType.GetSize(): Integer;
+function TCPRecordType.GetSize(): Integer;
 begin
   Result := FSize;
 end;
 
-{ TELFunctionType }
-
-constructor TELFunctionType.Create(const AParameterTypes: TArray<TELType>; const AReturnType: TELType; const AIsVariadic: Boolean);
+{ TCPFunctionType }
+constructor TCPFunctionType.Create(const AParameterTypes: TArray<TCPType>; const AReturnType: TCPType; const AIsVariadic: Boolean);
 begin
   if Assigned(AReturnType) then
     inherited Create(tkFunction, 'function')
@@ -423,21 +421,21 @@ begin
   FSize := 8; // Function pointer size
 end;
 
-destructor TELFunctionType.Destroy();
+destructor TCPFunctionType.Destroy();
 begin
   // Note: We don't free parameter/return types as they're managed by TypeManager
   inherited;
 end;
 
-function TELFunctionType.IsCompatible(const AOther: TELType): Boolean;
+function TCPFunctionType.IsCompatible(const AOther: TCPType): Boolean;
 var
   LIndex: Integer;
-  LOtherFunc: TELFunctionType;
+  LOtherFunc: TCPFunctionType;
 begin
-  if not (AOther is TELFunctionType) then
+  if not (AOther is TCPFunctionType) then
     Exit(False);
     
-  LOtherFunc := TELFunctionType(AOther);
+  LOtherFunc := TCPFunctionType(AOther);
   
   // Check return type compatibility
   if Assigned(FReturnType) <> Assigned(LOtherFunc.FReturnType) then
@@ -464,7 +462,7 @@ begin
   Result := True;
 end;
 
-function TELFunctionType.GetTypeName(): string;
+function TCPFunctionType.GetTypeName(): string;
 var
   LResult: string;
   LIndex: Integer;
@@ -497,92 +495,91 @@ begin
   Result := LResult;
 end;
 
-function TELFunctionType.GetSize(): Integer;
+function TCPFunctionType.GetSize(): Integer;
 begin
   Result := 8; // Function pointer size
 end;
 
-{ TELTypeManager }
-
-constructor TELTypeManager.Create();
+{ TCPTypeManager }
+constructor TCPTypeManager.Create();
 begin
   inherited;
-  FTypes := TObjectDictionary<string, TELType>.Create([doOwnsValues]);
-  FBasicTypes := TDictionary<TELBasicType, TELBasicTypeInfo>.Create();
+  FTypes := TObjectDictionary<string, TCPType>.Create([doOwnsValues]);
+  FBasicTypes := TDictionary<TCPBasicType, TCPBasicTypeInfo>.Create();
   InitializeBasicTypes();
 end;
 
-destructor TELTypeManager.Destroy();
+destructor TCPTypeManager.Destroy();
 begin
   FBasicTypes.Free();
   FTypes.Free();
   inherited;
 end;
 
-procedure TELTypeManager.InitializeBasicTypes();
+procedure TCPTypeManager.InitializeBasicTypes();
 var
-  LBasicType: TELBasicType;
-  LTypeInfo: TELBasicTypeInfo;
+  LBasicType: TCPBasicType;
+  LTypeInfo: TCPBasicTypeInfo;
 begin
-  for LBasicType := Low(TELBasicType) to High(TELBasicType) do
+  for LBasicType := Low(TCPBasicType) to High(TCPBasicType) do
   begin
-    LTypeInfo := TELBasicTypeInfo.Create(LBasicType);
+    LTypeInfo := TCPBasicTypeInfo.Create(LBasicType);
     FBasicTypes.Add(LBasicType, LTypeInfo);
     FTypes.AddOrSetValue(LTypeInfo.GetTypeName(), LTypeInfo);
   end;
 end;
 
-function TELTypeManager.GetBasicType(const ABasicType: TELBasicType): TELBasicTypeInfo;
+function TCPTypeManager.GetBasicType(const ABasicType: TCPBasicType): TCPBasicTypeInfo;
 begin
   Result := FBasicTypes[ABasicType];
 end;
 
-function TELTypeManager.GetTypeByName(const ATypeName: string): TELType;
+function TCPTypeManager.GetTypeByName(const ATypeName: string): TCPType;
 begin
   if not FTypes.TryGetValue(ATypeName, Result) then
     Result := nil;
 end;
 
-function TELTypeManager.CreatePointerType(const ATargetType: TELType): TELPointerType;
+function TCPTypeManager.CreatePointerType(const ATargetType: TCPType): TCPPointerType;
 begin
-  Result := TELPointerType.Create(ATargetType);
+  Result := TCPPointerType.Create(ATargetType);
   // Note: Pointer types are typically not registered globally
 end;
 
-function TELTypeManager.CreateArrayType(const AElementType: TELType; const AElementCount: Integer): TELArrayType;
+function TCPTypeManager.CreateArrayType(const AElementType: TCPType; const AElementCount: Integer): TCPArrayType;
 begin
-  Result := TELArrayType.Create(AElementType, AElementCount);
+  Result := TCPArrayType.Create(AElementType, AElementCount);
   // Note: Array types are typically not registered globally
 end;
 
-function TELTypeManager.CreateRecordType(const AName: string): TELRecordType;
+function TCPTypeManager.CreateRecordType(const AName: string): TCPRecordType;
 begin
-  Result := TELRecordType.Create();
+  Result := TCPRecordType.Create();
   if AName <> '' then
     RegisterType(AName, Result);
 end;
 
-function TELTypeManager.CreateFunctionType(const AParameterTypes: TArray<TELType>; const AReturnType: TELType; const AIsVariadic: Boolean): TELFunctionType;
+function TCPTypeManager.CreateFunctionType(const AParameterTypes: TArray<TCPType>; const AReturnType: TCPType; const AIsVariadic: Boolean): TCPFunctionType;
 begin
-  Result := TELFunctionType.Create(AParameterTypes, AReturnType, AIsVariadic);
+  Result := TCPFunctionType.Create(AParameterTypes, AReturnType, AIsVariadic);
   // Note: Function types are typically not registered globally
 end;
 
-procedure TELTypeManager.RegisterType(const AName: string; const AType: TELType);
+procedure TCPTypeManager.RegisterType(const AName: string; const AType: TCPType);
 begin
   FTypes.AddOrSetValue(AName, AType);
 end;
 
-function TELTypeManager.ResolveType(const ATypeNode: TELASTNode): TELType;
+function TCPTypeManager.ResolveType(const ATypeNode: TCPASTNode): TCPType;
 var
   LTypeName: string;
-  LTargetType: TELType;
-  LElementType: TELType;
+  LTargetType: TCPType;
+  LElementType: TCPType;
   LElementCount: Integer;
-  LRecordType: TELRecordType;
-  LFieldNode: TELASTNode;
+  LRecordType: TCPRecordType;
+  LFieldNode: TCPASTNode;
   LFieldName: string;
-  LFieldType: TELType;
+  LFieldType: TCPType;
   LIndex: Integer;
 begin
   if not Assigned(ATypeNode) then
@@ -653,7 +650,7 @@ begin
   end;
 end;
 
-function TELTypeManager.AreTypesCompatible(const AType1, AType2: TELType): Boolean;
+function TCPTypeManager.AreTypesCompatible(const AType1, AType2: TCPType): Boolean;
 begin
   if not Assigned(AType1) or not Assigned(AType2) then
     Result := False
@@ -661,7 +658,7 @@ begin
     Result := AType1.IsCompatible(AType2);
 end;
 
-function TELTypeManager.GetCommonType(const AType1, AType2: TELType): TELType;
+function TCPTypeManager.GetCommonType(const AType1, AType2: TCPType): TCPType;
 begin
   if AreTypesCompatible(AType1, AType2) then
     Result := AType1

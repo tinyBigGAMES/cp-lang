@@ -1,18 +1,22 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Include;
+unit CPLang.Include;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
@@ -21,17 +25,17 @@ uses
   System.IOUtils,
   System.Classes,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.SourceMap,
-  ELang.Errors;
+  CPLang.Common,
+  CPLang.SourceMap,
+  CPLang.Errors;
 
 type
-  { TELIncludeManager }
-  TELIncludeManager = class(TELObject)
+  { TCPIncludeManager }
+  TCPIncludeManager = class
   private
     FIncludedFiles: TStringList;
     FIncludePaths: TStringList;
-    FSourceMapper: TELSourceMapper;
+    FSourceMapper: TCPSourceMapper;
     FBasePath: string;
     FMergedSource: string;
     
@@ -41,11 +45,11 @@ type
     function ValidateAngleBracketInclude(const AInclude: string): Boolean;
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
     function ProcessMainFile(const AMainFileName: string): string;
-    function GetSourcePosition(const ACharIndex: Integer): TELSourcePosition;
+    function GetSourcePosition(const ACharIndex: Integer): TCPSourcePosition;
     function GetSourceLine(const ACharIndex: Integer): string;
     procedure Clear();
     
@@ -55,24 +59,23 @@ type
     function GetIncludePathCount(): Integer;
     
     property BasePath: string read FBasePath write FBasePath;
-    property SourceMapper: TELSourceMapper read FSourceMapper;
+    property SourceMapper: TCPSourceMapper read FSourceMapper;
   end;
 
 implementation
 
-{ TELIncludeManager }
-
-constructor TELIncludeManager.Create();
+{ TCPIncludeManager }
+constructor TCPIncludeManager.Create();
 begin
   inherited;
   FIncludedFiles := TStringList.Create();
   FIncludePaths := TStringList.Create();
-  FSourceMapper := TELSourceMapper.Create();
+  FSourceMapper := TCPSourceMapper.Create();
   FBasePath := '';
   FMergedSource := '';
 end;
 
-destructor TELIncludeManager.Destroy();
+destructor TCPIncludeManager.Destroy();
 begin
   FIncludedFiles.Free();
   FIncludePaths.Free();
@@ -80,37 +83,37 @@ begin
   inherited;
 end;
 
-procedure TELIncludeManager.Clear();
+procedure TCPIncludeManager.Clear();
 begin
   FIncludedFiles.Clear();
   FSourceMapper.Clear();
   FMergedSource := '';
 end;
 
-procedure TELIncludeManager.AddIncludePath(const APath: string);
+procedure TCPIncludeManager.AddIncludePath(const APath: string);
 begin
   if not FIncludePaths.Contains(APath) then
     FIncludePaths.Add(APath);
 end;
 
-procedure TELIncludeManager.ClearIncludePaths();
+procedure TCPIncludeManager.ClearIncludePaths();
 begin
   FIncludePaths.Clear();
 end;
 
-function TELIncludeManager.GetIncludePath(const AIndex: Integer): string;
+function TCPIncludeManager.GetIncludePath(const AIndex: Integer): string;
 begin
   if (AIndex < 0) or (AIndex >= FIncludePaths.Count) then
-    raise EELException.Create('Include path index out of bounds: %d', [AIndex]);
+    raise ECPException.Create('Include path index out of bounds: %d', [AIndex]);
   Result := FIncludePaths[AIndex];
 end;
 
-function TELIncludeManager.GetIncludePathCount(): Integer;
+function TCPIncludeManager.GetIncludePathCount(): Integer;
 begin
   Result := FIncludePaths.Count;
 end;
 
-function TELIncludeManager.ValidateAngleBracketInclude(const AInclude: string): Boolean;
+function TCPIncludeManager.ValidateAngleBracketInclude(const AInclude: string): Boolean;
 var
   LFileName: string;
 begin
@@ -132,11 +135,9 @@ begin
   Result := True;
 end;
 
-function TELIncludeManager.ProcessMainFile(const AMainFileName: string): string;
+function TCPIncludeManager.ProcessMainFile(const AMainFileName: string): string;
 var
   LCurrentCharPos: Integer;
-  LLines: TArray<string>;
-  LIndex: Integer;
 begin
   Clear();
   FBasePath := TPath.GetDirectoryName(TPath.GetFullPath(AMainFileName));
@@ -147,7 +148,7 @@ begin
   Result := FMergedSource;
 end;
 
-function TELIncludeManager.ProcessFile(const AFileName: string; var ACurrentCharPos: Integer): string;
+function TCPIncludeManager.ProcessFile(const AFileName: string; var ACurrentCharPos: Integer): string;
 var
   LFileContent: string;
   LLines: TArray<string>;
@@ -165,7 +166,7 @@ begin
   Result := '';
   
   if not TFile.Exists(AFileName) then
-    raise EELException.Create('Include file not found: %s', [AFileName]);
+    raise ECPException.Create('Include file not found: %s', [AFileName]);
     
   if IsAlreadyIncluded(AFileName) then
     Exit; // Prevent circular includes
@@ -206,7 +207,7 @@ begin
         AddIncludePath(LIncludePath);
       end
       else
-        raise EELException.Create('Invalid #includepath directive: path must be enclosed in quotes');
+        raise ECPException.Create('Invalid #includepath directive: path must be enclosed in quotes');
       
       // After includepath, prepare for next content block
       LContentStartPos := ACurrentCharPos;
@@ -242,14 +243,14 @@ begin
         LIncludePath := LLine.Substring(1, LLine.Length - 2);
         
         if not ValidateAngleBracketInclude(LIncludePath) then
-          raise EELException.Create('Invalid angle bracket include "%s": must be filename.e format only (no paths)', [LIncludePath]);
+          raise ECPException.Create('Invalid angle bracket include "%s": must be filename.e format only (no paths)', [LIncludePath]);
           
         LIncludeFile := ResolveIncludePath(LIncludePath, True);
         LIncludeContent := ProcessFile(LIncludeFile, ACurrentCharPos);
         Result := Result + LIncludeContent;
       end
       else
-        raise EELException.Create('Invalid #include directive: must be "filename" or <filename>');
+        raise ECPException.Create('Invalid #include directive: must be "filename" or <filename>');
       
       // After include, prepare for next content block
       LContentStartPos := ACurrentCharPos;
@@ -279,7 +280,7 @@ begin
   end;
 end;
 
-function TELIncludeManager.ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean): string;
+function TCPIncludeManager.ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean): string;
 var
   LSearchPaths: string;
   LIndex: Integer;
@@ -288,7 +289,7 @@ begin
   begin
     // Angle bracket include - search in include paths only
     if FIncludePaths.Count = 0 then
-      raise EELException.Create('No include paths configured for angle bracket include: <%s>', [AIncludePath]);
+      raise ECPException.Create('No include paths configured for angle bracket include: <%s>', [AIncludePath]);
     
     // Build semicolon-separated search paths for FileSearch
     LSearchPaths := '';
@@ -301,7 +302,7 @@ begin
     
     Result := FileSearch(AIncludePath, LSearchPaths);
     if Result = '' then
-      raise EELException.Create('Cannot find angle bracket include <%s> in configured include paths', [AIncludePath]);
+      raise ECPException.Create('Cannot find angle bracket include <%s> in configured include paths', [AIncludePath]);
   end
   else
   begin
@@ -318,11 +319,11 @@ begin
       Exit;
     end;
     
-    raise EELException.Create('Cannot resolve include path: %s', [AIncludePath]);
+    raise ECPException.Create('Cannot resolve include path: %s', [AIncludePath]);
   end;
 end;
 
-function TELIncludeManager.IsAlreadyIncluded(const AFileName: string): Boolean;
+function TCPIncludeManager.IsAlreadyIncluded(const AFileName: string): Boolean;
 var
   LFullPath: string;
 begin
@@ -330,14 +331,14 @@ begin
   Result := FIncludedFiles.IndexOf(LFullPath) >= 0;
 end;
 
-function TELIncludeManager.GetSourcePosition(const ACharIndex: Integer): TELSourcePosition;
+function TCPIncludeManager.GetSourcePosition(const ACharIndex: Integer): TCPSourcePosition;
 begin
   Result := FSourceMapper.MapPosition(ACharIndex);
 end;
 
-function TELIncludeManager.GetSourceLine(const ACharIndex: Integer): string;
+function TCPIncludeManager.GetSourceLine(const ACharIndex: Integer): string;
 var
-  LSourcePos: TELSourcePosition;
+  LSourcePos: TCPSourcePosition;
 begin
   LSourcePos := FSourceMapper.MapPosition(ACharIndex);
   Result := FSourceMapper.GetSourceLine(LSourcePos.Line);

@@ -1,12 +1,20 @@
-(* E Language Grammar - C99 with Pascal Syntax, Mandatory Main Function *)
+# CP-Lang Grammar Specification
 
+**CP Language Grammar - C99 with Pascal Syntax, Mandatory Main Function**
+
+## Program Structure
+
+```bnf
 program ::= translation_unit main_function
 
 translation_unit ::= (preprocessor_directive | declaration)*
 
 main_function ::= "function" "main" "(" ")" ":" "int32" statement_block
+```
 
-(* Preprocessor Directives *)
+## Preprocessor Directives
+
+```bnf
 preprocessor_directive ::= "#include " ("<" IDENTIFIER ">" | STRING_LITERAL)
                          | "#includepath " STRING_LITERAL
                          | "#define " IDENTIFIER replacement_list?
@@ -24,25 +32,40 @@ preprocessor_directive ::= "#include " ("<" IDENTIFIER ">" | STRING_LITERAL)
 replacement_list ::= token_sequence
 token_sequence ::= [^\n]+
 constant_expression ::= expression
+```
 
+## Declarations
+
+```bnf
 declaration_list ::= declaration*
 
 declaration ::= variable_declaration
               | function_declaration  
               | type_declaration
               | statement
+```
 
-(* Variable Declarations - can appear anywhere like C *)
+### Variable Declarations
+
+Variables can appear anywhere like C:
+
+```bnf
 variable_declaration ::= "var" identifier_list ":" type_spec init_value? ";"
 
 identifier_list ::= IDENTIFIER ("," IDENTIFIER)*
 
 init_value ::= ":=" expression
+```
 
-(* Type Declarations *)
+### Type Declarations
+
+```bnf
 type_declaration ::= "type" IDENTIFIER "=" type_spec ";"
+```
 
-(* Function Declarations *)
+### Function Declarations
+
+```bnf
 function_declaration ::= function_header statement_block
                        | function_header "external" STRING_LITERAL ";"
 
@@ -57,10 +80,11 @@ param_def_list ::= param_def ("," param_def)* ("," "...")?
 param_def ::= param_modifier? identifier_list ":" type_spec
 
 param_modifier ::= "ref" | "const"
+```
 
-(* No separate return_type rule needed - incorporated into function_header *)
+## Type Specifications
 
-(* Type Specifications *)
+```bnf
 type_spec ::= basic_type
             | pointer_type
             | array_type  
@@ -84,8 +108,11 @@ field_def ::= identifier_list ":" type_spec
 
 function_type ::= "function" parameter_list return_type
                 | "procedure" parameter_list
+```
 
-(* Statements *)
+## Statements
+
+```bnf
 statement_block ::= "begin" statement_list "end"
 
 statement_list ::= statement*
@@ -108,7 +135,11 @@ statement ::= assignment_statement ";"
 assignment_statement ::= lvalue ":=" expression
 
 call_statement ::= expression
+```
 
+### Control Flow Statements
+
+```bnf
 if_statement ::= "if" expression "then" statement ("else" statement)?
 
 while_statement ::= "while" expression "do" statement
@@ -135,8 +166,13 @@ return_statement ::= "return" expression?
 goto_statement ::= "goto" IDENTIFIER
 
 label_statement ::= IDENTIFIER ":"
+```
 
-(* Expressions *)
+**Note:** For Pascal-style for-loops (first form), the IDENTIFIER must refer to a previously declared variable of an ordinal type (integer types: int, int8, int16, int32, int64, uint8, uint16, uint32, uint64, or char). Boolean, floating-point, string, pointer, array, and record types are not allowed as they lack practical discrete ordering semantics required by "to" and "downto" operations.
+
+## Expressions
+
+```bnf
 expression ::= conditional_expression
 
 conditional_expression ::= logical_or_expression ("?" expression ":" conditional_expression)?
@@ -178,14 +214,38 @@ lvalue ::= IDENTIFIER
          | "(" lvalue ")"
 
 constant ::= INTEGER_LITERAL | REAL_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL
+```
 
-(* Comments - C-style *)
+## Lexical Elements
+
+### Comments
+
+C-style comments are supported:
+
+```bnf
 COMMENT ::= "//" [^\n]* "\n"
           | "/*" .* "*/"
+```
 
+### Literals
+
+```bnf
 BOOLEAN_LITERAL ::= "true" | "false"
 IDENTIFIER ::= [a-zA-Z_][a-zA-Z0-9_]*
 INTEGER_LITERAL ::= [0-9]+ | "0x"[0-9a-fA-F]+ | "0"[0-7]+
 REAL_LITERAL ::= [0-9]+"."[0-9]+([eE][+-]?[0-9]+)?
 CHAR_LITERAL ::= "'"[^']"'"
 STRING_LITERAL ::= '"'[^"]*'"'
+```
+
+## Language Features
+
+- **C99 syntax** with Pascal keywords and structure
+- **Mandatory main function** requirement
+- **Preprocessor directives** for include management and conditional compilation
+- **Strong typing** with comprehensive type system
+- **Pascal-style** begin/end blocks and control structures
+- **Modern data types** including sized integers and floating-point types
+- **Record types** for structured data
+- **Function pointers** and external function declarations
+- **Flexible variable declarations** that can appear anywhere in scope

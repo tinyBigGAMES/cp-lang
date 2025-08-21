@@ -1,22 +1,22 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
 
- https://github.com/tinyBigGAMES/e-lang
+ https://cp-lang.org/
 
  See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.IRContext;
+unit CPLang.IRContext;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
@@ -26,15 +26,16 @@ uses
   System.Generics.Collections,
   System.StrUtils,
   System.Math,
-  ELang.LLVM,
-  ELang.Resources,
-  ELang.Errors,
-  ELang.Platform;
+  CPLang.LLVM,
+  CPLang.Platform,
+  CPLang.Resources,
+  CPLang.Errors,
+  CPLang.Common;
 
 type
 
-  { TELIRContext }
-  TELIRContext = class
+  { TCPIRContext }
+  TCPIRContext = class
   private
     FContext: LLVMContextRef;
     FModule: LLVMModuleRef;
@@ -64,9 +65,9 @@ type
     destructor Destroy; override;
     
     // Module Configuration
-    function ModuleName(const AName: string): TELIRContext;
-    function TargetTriple(const ATriple: string): TELIRContext;
-    function DataLayout(const ALayout: string): TELIRContext;
+    function ModuleName(const AName: string): TCPIRContext;
+    function TargetTriple(const ATriple: string): TCPIRContext;
+    function DataLayout(const ALayout: string): TCPIRContext;
 
     // Type Creation Methods
     function VoidType: LLVMTypeRef;
@@ -110,18 +111,18 @@ type
 
     // Function Building Methods
     function BeginFunction(const AName: string; const AFunctionType: LLVMTypeRef;
-      const ACallingConv: LLVMCallConv = LLVMCCallConv; const ALinkage: LLVMLinkage = LLVMExternalLinkage): TELIRContext;
-    function AddFunctionAttribute(const AAttribute: LLVMAttributeRef): TELIRContext;
-    function EndFunction: TELIRContext;
+      const ACallingConv: LLVMCallConv = LLVMCCallConv; const ALinkage: LLVMLinkage = LLVMExternalLinkage): TCPIRContext;
+    function AddFunctionAttribute(const AAttribute: LLVMAttributeRef): TCPIRContext;
+    function EndFunction: TCPIRContext;
 
     // Basic Block Methods
-    function BasicBlock(const AName: string): TELIRContext;
+    function BasicBlock(const AName: string): TCPIRContext;
     function CreateLabel(const APrefix: string = 'bb'): string;
 
     // Memory Operations
     function Alloca(const AType: LLVMTypeRef; const AArraySize: LLVMValueRef = nil; const AAlignment: Integer = 0): LLVMValueRef;
     function Load(const APtr: LLVMValueRef; const AType: LLVMTypeRef): LLVMValueRef;
-    function Store(const AValue: LLVMValueRef; const APtr: LLVMValueRef; const AAlignment: Integer = 0): TELIRContext;
+    function Store(const AValue: LLVMValueRef; const APtr: LLVMValueRef; const AAlignment: Integer = 0): TCPIRContext;
     function GEP(const APtr: LLVMValueRef; const AIndices: array of LLVMValueRef): LLVMValueRef;
     function ExtractValue(const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
     function InsertValue(const AAggregate: LLVMValueRef; const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
@@ -169,22 +170,22 @@ type
     function BitCast(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 
     // Control Flow Operations
-    function Br(const ATarget: LLVMBasicBlockRef): TELIRContext;
-    function CondBr(const ACondition: LLVMValueRef; const ATrueTarget: LLVMBasicBlockRef; const AFalseTarget: LLVMBasicBlockRef): TELIRContext;
+    function Br(const ATarget: LLVMBasicBlockRef): TCPIRContext;
+    function CondBr(const ACondition: LLVMValueRef; const ATrueTarget: LLVMBasicBlockRef; const AFalseTarget: LLVMBasicBlockRef): TCPIRContext;
     function Switch(const AValue: LLVMValueRef; const ADefaultTarget: LLVMBasicBlockRef): LLVMValueRef;
-    function AddSwitchCase(const ASwitchInst: LLVMValueRef; const AValue: LLVMValueRef; const ATarget: LLVMBasicBlockRef): TELIRContext;
-    function Ret(const AValue: LLVMValueRef = nil): TELIRContext;
-    function RetVoid: TELIRContext;
+    function AddSwitchCase(const ASwitchInst: LLVMValueRef; const AValue: LLVMValueRef; const ATarget: LLVMBasicBlockRef): TCPIRContext;
+    function Ret(const AValue: LLVMValueRef = nil): TCPIRContext;
+    function RetVoid: TCPIRContext;
 
     // PHI Nodes
     function Phi(const AType: LLVMTypeRef): LLVMValueRef;
-    function AddPhiIncoming(const APhiNode: LLVMValueRef; const AValue: LLVMValueRef; const ABlock: LLVMBasicBlockRef): TELIRContext;
+    function AddPhiIncoming(const APhiNode: LLVMValueRef; const AValue: LLVMValueRef; const ABlock: LLVMBasicBlockRef): TCPIRContext;
 
     // Function Calls
     function Call(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef; 
       const ACallingConv: LLVMCallConv = LLVMCCallConv): LLVMValueRef;
     function CallVoid(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef; 
-      const ACallingConv: LLVMCallConv = LLVMCCallConv): TELIRContext;
+      const ACallingConv: LLVMCallConv = LLVMCCallConv): TCPIRContext;
     function IndirectCall(const AFunctionPtr: LLVMValueRef; const AFunctionType: LLVMTypeRef; const AArgs: array of LLVMValueRef; 
       const ACallingConv: LLVMCallConv = LLVMCCallConv): LLVMValueRef;
 
@@ -194,12 +195,12 @@ type
       const AHasSideEffects: Boolean = True; const AIsAlignStack: Boolean = False): LLVMValueRef;
 
     // Memory Intrinsics
-    function MemCpy(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TELIRContext;
-    function MemSet(const ADest: LLVMValueRef; const AValue: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TELIRContext;
-    function MemMove(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TELIRContext;
+    function MemCpy(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TCPIRContext;
+    function MemSet(const ADest: LLVMValueRef; const AValue: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TCPIRContext;
+    function MemMove(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer = 1): TCPIRContext;
 
     // Utility Methods
-    function Comment(const AComment: string): TELIRContext;
+    function Comment(const AComment: string): TCPIRContext;
     function GetStringReference(const AValue: string): LLVMValueRef;
     function CreateBasicBlock(const AName: string; const AFunction: LLVMValueRef = nil): LLVMBasicBlockRef;
     function GetFunctionType(const AFunction: LLVMValueRef): LLVMTypeRef;
@@ -207,7 +208,7 @@ type
     // Module Access
     function GetModule: LLVMModuleRef;
     function ExtractModule: LLVMModuleRef;
-    function Clear: TELIRContext;
+    function Clear: TCPIRContext;
     function GetIR: string;
 
     // Properties
@@ -220,8 +221,8 @@ type
 
 implementation
 
-{ TELIRContext }
-constructor TELIRContext.Create(const AModuleName: string; const AContext: LLVMContextRef);
+{ TCPIRContext }
+constructor TCPIRContext.Create(const AModuleName: string; const AContext: LLVMContextRef);
 begin
   inherited Create;
   
@@ -248,7 +249,7 @@ begin
   end;
 
   if FContext = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSIRContextCreationFailed,
       [],
       RSIRContextContextCreationNil,
@@ -257,7 +258,7 @@ begin
 
   FModule := LLVMModuleCreateWithNameInContext(PUTF8Char(UTF8String(AModuleName)), FContext);
   if FModule = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       Format(RSIRModuleCreationFailed, [AModuleName]),
       [AModuleName],
       RSIRContextModuleCreationNil,
@@ -266,7 +267,7 @@ begin
 
   FBuilder := LLVMCreateBuilderInContext(FContext);
   if FBuilder = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSIRBuilderCreationFailed,
       [],
       RSIRContextBuilderCreationNil,
@@ -274,7 +275,7 @@ begin
     );
 end;
 
-destructor TELIRContext.Destroy;
+destructor TCPIRContext.Destroy;
 begin
   FStringConstants.Free;
 
@@ -290,14 +291,14 @@ begin
   inherited;
 end;
 
-function TELIRContext.GetNextRegister: string;
+function TCPIRContext.GetNextRegister: string;
 begin
   Inc(FRegisterCount);
   Result := IntToStr(FRegisterCount);  // LLVM adds % automatically
   Result := '';
 end;
 
-function TELIRContext.GetNextStringLiteral: string;
+function TCPIRContext.GetNextStringLiteral: string;
 begin
   Inc(FStringLiteralCount);
   if FStringLiteralCount = 1 then
@@ -306,13 +307,13 @@ begin
     Result := '@.str.' + IntToStr(FStringLiteralCount - 1);
 end;
 
-function TELIRContext.GetNextGlobal: string;
+function TCPIRContext.GetNextGlobal: string;
 begin
   Inc(FGlobalCount);
   Result := '@global' + IntToStr(FGlobalCount);
 end;
 
-function TELIRContext.CreateStringConstant(const AValue: string): LLVMValueRef;
+function TCPIRContext.CreateStringConstant(const AValue: string): LLVMValueRef;
 var
   LCleanString: string;
   LEscapedValue: UTF8String;
@@ -362,10 +363,10 @@ begin
   FStringConstants.Add(AValue, Result);
 end;
 
-procedure TELIRContext.ValidateModuleState(const AOperation: string);
+procedure TCPIRContext.ValidateModuleState(const AOperation: string);
 begin
   if FModule = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       Format(RSIRCannotPerformNoModule, [AOperation]),
       [AOperation],
       RSIRContextModuleIsNil,
@@ -373,12 +374,12 @@ begin
     );
 end;
 
-procedure TELIRContext.ValidateFunctionState(const AOperation: string);
+procedure TCPIRContext.ValidateFunctionState(const AOperation: string);
 begin
   ValidateModuleState(AOperation);
   
   if FCurrentFunction = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       Format(RSIRCannotPerformNoFunction, [AOperation]),
       [AOperation],
       RSIRContextNoFunctionBuilding,
@@ -386,12 +387,12 @@ begin
     );
 end;
 
-procedure TELIRContext.ValidateBlockState(const AOperation: string);
+procedure TCPIRContext.ValidateBlockState(const AOperation: string);
 begin
   ValidateFunctionState(AOperation);
   
   if FCurrentBlock = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       Format(RSIRCannotPerformNoBlock, [AOperation]),
       [AOperation],
       RSIRContextNoBlockActive,
@@ -399,12 +400,12 @@ begin
     );
 end;
 
-function TELIRContext.ModuleName(const AName: string): TELIRContext;
+function TCPIRContext.ModuleName(const AName: string): TCPIRContext;
 begin
   ValidateModuleState('ModuleName');
   
   if Trim(AName) = '' then
-    raise EELException.Create(RSIRModuleNameEmpty, []);
+    raise ECPException.Create(RSIRModuleNameEmpty, []);
     
   FModuleName := AName;
   LLVMSetModuleIdentifier(FModule, PUTF8Char(UTF8String(AName)), Length(UTF8String(AName)));
@@ -412,7 +413,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.TargetTriple(const ATriple: string): TELIRContext;
+function TCPIRContext.TargetTriple(const ATriple: string): TCPIRContext;
 begin
   ValidateModuleState('TargetTriple');
   
@@ -423,7 +424,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.DataLayout(const ALayout: string): TELIRContext;
+function TCPIRContext.DataLayout(const ALayout: string): TCPIRContext;
 begin
   ValidateModuleState('DataLayout');
   
@@ -434,52 +435,52 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.VoidType: LLVMTypeRef;
+function TCPIRContext.VoidType: LLVMTypeRef;
 begin
   Result := LLVMVoidTypeInContext(FContext);
 end;
 
-function TELIRContext.BoolType: LLVMTypeRef;
+function TCPIRContext.BoolType: LLVMTypeRef;
 begin
   Result := LLVMInt1TypeInContext(FContext);
 end;
 
-function TELIRContext.Int1Type: LLVMTypeRef;
+function TCPIRContext.Int1Type: LLVMTypeRef;
 begin
   Result := LLVMInt1TypeInContext(FContext);
 end;
 
-function TELIRContext.Int8Type: LLVMTypeRef;
+function TCPIRContext.Int8Type: LLVMTypeRef;
 begin
   Result := LLVMInt8TypeInContext(FContext);
 end;
 
-function TELIRContext.Int16Type: LLVMTypeRef;
+function TCPIRContext.Int16Type: LLVMTypeRef;
 begin
   Result := LLVMInt16TypeInContext(FContext);
 end;
 
-function TELIRContext.Int32Type: LLVMTypeRef;
+function TCPIRContext.Int32Type: LLVMTypeRef;
 begin
   Result := LLVMInt32TypeInContext(FContext);
 end;
 
-function TELIRContext.Int64Type: LLVMTypeRef;
+function TCPIRContext.Int64Type: LLVMTypeRef;
 begin
   Result := LLVMInt64TypeInContext(FContext);
 end;
 
-function TELIRContext.FloatType: LLVMTypeRef;
+function TCPIRContext.FloatType: LLVMTypeRef;
 begin
   Result := LLVMFloatTypeInContext(FContext);
 end;
 
-function TELIRContext.DoubleType: LLVMTypeRef;
+function TCPIRContext.DoubleType: LLVMTypeRef;
 begin
   Result := LLVMDoubleTypeInContext(FContext);
 end;
 
-function TELIRContext.IntPtrType: LLVMTypeRef;
+function TCPIRContext.IntPtrType: LLVMTypeRef;
 var
   LTargetTriple: string;
   LArch: string;
@@ -487,7 +488,7 @@ var
 begin
   LTargetTriple := FTargetTriple;
   if LTargetTriple = '' then
-    ELGetLLVMPlatformTargetTriple();
+    CPGetLLVMPlatformTargetTriple();
 
   LDashPos := LTargetTriple.IndexOf('-');
   if LDashPos > 0 then
@@ -503,17 +504,17 @@ begin
     Result := LLVMInt64TypeInContext(FContext);
 end;
 
-function TELIRContext.PointerType(const APointedType: LLVMTypeRef): LLVMTypeRef;
+function TCPIRContext.PointerType(const APointedType: LLVMTypeRef): LLVMTypeRef;
 begin
   Result := LLVMPointerType(APointedType, 0);
 end;
 
-function TELIRContext.ArrayType(const AElementType: LLVMTypeRef; const ASize: Cardinal): LLVMTypeRef;
+function TCPIRContext.ArrayType(const AElementType: LLVMTypeRef; const ASize: Cardinal): LLVMTypeRef;
 begin
   Result := LLVMArrayType(AElementType, ASize);
 end;
 
-function TELIRContext.StructType(const AFields: array of LLVMTypeRef; const APacked: Boolean): LLVMTypeRef;
+function TCPIRContext.StructType(const AFields: array of LLVMTypeRef; const APacked: Boolean): LLVMTypeRef;
 var
   LFieldsArray: array of LLVMTypeRef;
   I: Integer;
@@ -528,7 +529,7 @@ begin
     Result := LLVMStructTypeInContext(FContext, nil, 0, LLVMBool(IfThen(APacked, 1, 0)));
 end;
 
-function TELIRContext.FunctionType(const AReturnType: LLVMTypeRef; const AParams: array of LLVMTypeRef; const AVarArgs: Boolean): LLVMTypeRef;
+function TCPIRContext.FunctionType(const AReturnType: LLVMTypeRef; const AParams: array of LLVMTypeRef; const AVarArgs: Boolean): LLVMTypeRef;
 var
   LParamsArray: array of LLVMTypeRef;
   I: Integer;
@@ -543,62 +544,62 @@ begin
     Result := LLVMFunctionType(AReturnType, nil, 0, LLVMBool(IfThen(AVarArgs, 1, 0)));
 end;
 
-function TELIRContext.ConstNull(const AType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.ConstNull(const AType: LLVMTypeRef): LLVMValueRef;
 begin
   Result := LLVMConstNull(AType);
 end;
 
-function TELIRContext.ConstUndef(const AType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.ConstUndef(const AType: LLVMTypeRef): LLVMValueRef;
 begin
   Result := LLVMGetUndef(AType);
 end;
 
-function TELIRContext.ConstBool(const AValue: Boolean): LLVMValueRef;
+function TCPIRContext.ConstBool(const AValue: Boolean): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt1TypeInContext(FContext), UInt64(IfThen(AValue, 1, 0)), LLVMBool(0));
 end;
 
-function TELIRContext.ConstInt1(const AValue: Boolean): LLVMValueRef;
+function TCPIRContext.ConstInt1(const AValue: Boolean): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt1TypeInContext(FContext), UInt64(IfThen(AValue, 1, 0)), LLVMBool(0));
 end;
 
-function TELIRContext.ConstInt8(const AValue: Byte): LLVMValueRef;
+function TCPIRContext.ConstInt8(const AValue: Byte): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt8TypeInContext(FContext), UInt64(AValue), LLVMBool(0));
 end;
 
-function TELIRContext.ConstInt16(const AValue: Word): LLVMValueRef;
+function TCPIRContext.ConstInt16(const AValue: Word): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt16TypeInContext(FContext), UInt64(AValue), LLVMBool(0));
 end;
 
-function TELIRContext.ConstInt32(const AValue: Integer): LLVMValueRef;
+function TCPIRContext.ConstInt32(const AValue: Integer): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt32TypeInContext(FContext), UInt64(Cardinal(AValue)), LLVMBool(0));
 end;
 
-function TELIRContext.ConstInt64(const AValue: Int64): LLVMValueRef;
+function TCPIRContext.ConstInt64(const AValue: Int64): LLVMValueRef;
 begin
   Result := LLVMConstInt(LLVMInt64TypeInContext(FContext), UInt64(AValue), LLVMBool(0));
 end;
 
-function TELIRContext.ConstFloat(const AValue: Single): LLVMValueRef;
+function TCPIRContext.ConstFloat(const AValue: Single): LLVMValueRef;
 begin
   Result := LLVMConstReal(LLVMFloatTypeInContext(FContext), AValue);
 end;
 
-function TELIRContext.ConstDouble(const AValue: Double): LLVMValueRef;
+function TCPIRContext.ConstDouble(const AValue: Double): LLVMValueRef;
 begin
   Result := LLVMConstReal(LLVMDoubleTypeInContext(FContext), AValue);
 end;
 
-function TELIRContext.ConstString(const AValue: string): LLVMValueRef;
+function TCPIRContext.ConstString(const AValue: string): LLVMValueRef;
 begin
   Result := CreateStringConstant(AValue);
 end;
 
-function TELIRContext.ConstArray(const AType: LLVMTypeRef; const AElements: array of LLVMValueRef): LLVMValueRef;
+function TCPIRContext.ConstArray(const AType: LLVMTypeRef; const AElements: array of LLVMValueRef): LLVMValueRef;
 var
   LElementsArray: array of LLVMValueRef;
   I: Integer;
@@ -613,7 +614,7 @@ begin
     Result := LLVMConstArray(AType, nil, 0);
 end;
 
-function TELIRContext.ConstStruct(const AElements: array of LLVMValueRef; const APacked: Boolean): LLVMValueRef;
+function TCPIRContext.ConstStruct(const AElements: array of LLVMValueRef; const APacked: Boolean): LLVMValueRef;
 var
   LElementsArray: array of LLVMValueRef;
   I: Integer;
@@ -628,7 +629,7 @@ begin
     Result := LLVMConstStructInContext(FContext, nil, 0, LLVMBool(IfThen(APacked, 1, 0)));
 end;
 
-function TELIRContext.DeclareGlobal(const AName: string; const AType: LLVMTypeRef; const AInitializer: LLVMValueRef;
+function TCPIRContext.DeclareGlobal(const AName: string; const AType: LLVMTypeRef; const AInitializer: LLVMValueRef;
   const ALinkage: LLVMLinkage): LLVMValueRef;
 var
   LGlobalName: string;
@@ -650,7 +651,7 @@ begin
   LLVMSetLinkage(Result, ALinkage);
 end;
 
-function TELIRContext.DeclareFunction(const AName: string; const AFunctionType: LLVMTypeRef;
+function TCPIRContext.DeclareFunction(const AName: string; const AFunctionType: LLVMTypeRef;
   const ACallingConv: LLVMCallConv; const ALinkage: LLVMLinkage): LLVMValueRef;
 begin
   ValidateModuleState('DeclareFunction');
@@ -660,7 +661,7 @@ begin
   LLVMSetFunctionCallConv(Result, ACallingConv);
 end;
 
-function TELIRContext.DeclareExternalFunction(const AName: string; const AReturnType: LLVMTypeRef; const ALibrary: string;
+function TCPIRContext.DeclareExternalFunction(const AName: string; const AReturnType: LLVMTypeRef; const ALibrary: string;
   const AParams: array of LLVMTypeRef; const ACallingConv: LLVMCallConv; const AVarArgs: Boolean): LLVMValueRef;
 var
   LFunctionType: LLVMTypeRef;
@@ -669,13 +670,13 @@ begin
   Result := DeclareFunction(AName, LFunctionType, ACallingConv, LLVMExternalLinkage);
 end;
 
-function TELIRContext.BeginFunction(const AName: string; const AFunctionType: LLVMTypeRef;
-  const ACallingConv: LLVMCallConv; const ALinkage: LLVMLinkage): TELIRContext;
+function TCPIRContext.BeginFunction(const AName: string; const AFunctionType: LLVMTypeRef;
+  const ACallingConv: LLVMCallConv; const ALinkage: LLVMLinkage): TCPIRContext;
 begin
   ValidateModuleState('BeginFunction');
   
   if Trim(AName) = '' then
-    raise EELException.Create(RSIRFunctionNameEmpty, []);
+    raise ECPException.Create(RSIRFunctionNameEmpty, []);
     
   FCurrentFunction := LLVMAddFunction(FModule, PUTF8Char(UTF8String(AName)), AFunctionType);
   LLVMSetLinkage(FCurrentFunction, ALinkage);
@@ -686,7 +687,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.AddFunctionAttribute(const AAttribute: LLVMAttributeRef): TELIRContext;
+function TCPIRContext.AddFunctionAttribute(const AAttribute: LLVMAttributeRef): TCPIRContext;
 begin
   ValidateFunctionState('AddFunctionAttribute');
 
@@ -695,7 +696,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.EndFunction: TELIRContext;
+function TCPIRContext.EndFunction: TCPIRContext;
 begin
   ValidateFunctionState('EndFunction');
   
@@ -705,14 +706,14 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.BasicBlock(const AName: string): TELIRContext;
+function TCPIRContext.BasicBlock(const AName: string): TCPIRContext;
 var
   LBlock: LLVMBasicBlockRef;
 begin
   ValidateFunctionState('BasicBlock');
   
   if Trim(AName) = '' then
-    raise EELException.Create(RSIRBasicBlockNameEmpty, []);
+    raise ECPException.Create(RSIRBasicBlockNameEmpty, []);
     
   LBlock := LLVMAppendBasicBlockInContext(FContext, FCurrentFunction, PUTF8Char(UTF8String(AName)));
   FCurrentBlock := LBlock;
@@ -721,13 +722,13 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.CreateLabel(const APrefix: string): string;
+function TCPIRContext.CreateLabel(const APrefix: string): string;
 begin
   Inc(FLabelCount);
   Result := APrefix + IntToStr(FLabelCount);
 end;
 
-function TELIRContext.CreateBasicBlock(const AName: string; const AFunction: LLVMValueRef): LLVMBasicBlockRef;
+function TCPIRContext.CreateBasicBlock(const AName: string; const AFunction: LLVMValueRef): LLVMBasicBlockRef;
 var
   LFunction: LLVMValueRef;
 begin
@@ -744,27 +745,27 @@ begin
   Result := LLVMAppendBasicBlockInContext(FContext, LFunction, PUTF8Char(UTF8String(AName)));
 end;
 
-function TELIRContext.Alloca(const AType: LLVMTypeRef; const AArraySize: LLVMValueRef; const AAlignment: Integer): LLVMValueRef;
+function TCPIRContext.Alloca(const AType: LLVMTypeRef; const AArraySize: LLVMValueRef; const AAlignment: Integer): LLVMValueRef;
 begin
   ValidateBlockState('Alloca');
   
   if AArraySize <> nil then
-    Result := LLVMBuildArrayAlloca(FBuilder, AType, AArraySize, ELAsUTF8(GetNextRegister()))
+    Result := LLVMBuildArrayAlloca(FBuilder, AType, AArraySize, CPAsUTF8(GetNextRegister()))
   else
-    Result := LLVMBuildAlloca(FBuilder, AType, ELAsUTF8(GetNextRegister()));
+    Result := LLVMBuildAlloca(FBuilder, AType, CPAsUTF8(GetNextRegister()));
     
   if AAlignment > 0 then
     LLVMSetAlignment(Result, Cardinal(AAlignment));
 end;
 
-function TELIRContext.Load(const APtr: LLVMValueRef; const AType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.Load(const APtr: LLVMValueRef; const AType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('Load');
   
-  Result := LLVMBuildLoad2(FBuilder, AType, APtr, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildLoad2(FBuilder, AType, APtr, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.Store(const AValue: LLVMValueRef; const APtr: LLVMValueRef; const AAlignment: Integer): TELIRContext;
+function TCPIRContext.Store(const AValue: LLVMValueRef; const APtr: LLVMValueRef; const AAlignment: Integer): TCPIRContext;
 var
   LStoreInst: LLVMValueRef;
 begin
@@ -778,7 +779,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.GEP(const APtr: LLVMValueRef; const AIndices: array of LLVMValueRef): LLVMValueRef;
+function TCPIRContext.GEP(const APtr: LLVMValueRef; const AIndices: array of LLVMValueRef): LLVMValueRef;
 var
   LIndicesArray: array of LLVMValueRef;
   LElementType: LLVMTypeRef;
@@ -794,12 +795,12 @@ begin
   LElementType := LLVMInt8TypeInContext(FContext);
     
   if Length(LIndicesArray) > 0 then
-    Result := LLVMBuildGEP2(FBuilder, LElementType, APtr, @LIndicesArray[0], Length(LIndicesArray), ELAsUTF8(GetNextRegister()))
+    Result := LLVMBuildGEP2(FBuilder, LElementType, APtr, @LIndicesArray[0], Length(LIndicesArray), CPAsUTF8(GetNextRegister()))
   else
-    Result := LLVMBuildGEP2(FBuilder, LElementType, APtr, nil, 0, ELAsUTF8(GetNextRegister()));
+    Result := LLVMBuildGEP2(FBuilder, LElementType, APtr, nil, 0, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ExtractValue(const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
+function TCPIRContext.ExtractValue(const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
 var
   V: LLVMValueRef;
   I: Integer;
@@ -819,13 +820,13 @@ begin
       LName := GetNextRegister()
     else
       LName := '';
-    V := LLVMBuildExtractValue(FBuilder, V, LIdx, ELAsUTF8(LName));
+    V := LLVMBuildExtractValue(FBuilder, V, LIdx, CPAsUTF8(LName));
   end;
 
   Result := V;
 end;
 
-function TELIRContext.InsertValue(const AAggregate: LLVMValueRef; const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
+function TCPIRContext.InsertValue(const AAggregate: LLVMValueRef; const AValue: LLVMValueRef; const AIndices: array of Integer): LLVMValueRef;
 var
   LDepth, I: Integer;
   LIdx: Cardinal;
@@ -842,7 +843,7 @@ begin
   if LDepth = 1 then
   begin
     LIdx := Cardinal(AIndices[0]);
-    Result := LLVMBuildInsertValue(FBuilder, AAggregate, AValue, LIdx, ELAsUTF8(GetNextRegister()));
+    Result := LLVMBuildInsertValue(FBuilder, AAggregate, AValue, LIdx, CPAsUTF8(GetNextRegister()));
     Exit;
   end;
 
@@ -868,139 +869,139 @@ begin
       LName := GetNextRegister()
     else
       LName := '';
-    LCurAgg := LLVMBuildInsertValue(FBuilder, LAggStack[I], LCurAgg, LIdx, ELAsUTF8(LName));
+    LCurAgg := LLVMBuildInsertValue(FBuilder, LAggStack[I], LCurAgg, LIdx, CPAsUTF8(LName));
   end;
 
   Result := LCurAgg;
 end;
 
-function TELIRContext.Add(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.Add(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('Add');
   
-  Result := LLVMBuildAdd(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildAdd(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.Sub(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.Sub(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('Sub');
 
-  Result := LLVMBuildSub(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSub(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.Mul(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.Mul(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('Mul');
   
-  Result := LLVMBuildMul(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildMul(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.UDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.UDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('UDiv');
   
-  Result := LLVMBuildUDiv(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildUDiv(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.SDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.SDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('SDiv');
   
-  Result := LLVMBuildSDiv(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSDiv(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.URem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.URem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('URem');
   
-  Result := LLVMBuildURem(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildURem(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.SRem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.SRem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('SRem');
   
-  Result := LLVMBuildSRem(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSRem(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FAdd(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FAdd(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FAdd');
   
-  Result := LLVMBuildFAdd(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFAdd(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FSub(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FSub(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FSub');
   
-  Result := LLVMBuildFSub(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFSub(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FMul(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FMul(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FMul');
   
-  Result := LLVMBuildFMul(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFMul(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FDiv(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FDiv');
   
-  Result := LLVMBuildFDiv(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFDiv(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FRem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FRem(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FRem');
   
-  Result := LLVMBuildFRem(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFRem(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.BitwiseAnd(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.BitwiseAnd(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('BitwiseAnd');
   
-  Result := LLVMBuildAnd(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildAnd(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.BitwiseOr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.BitwiseOr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('BitwiseOr');
   
-  Result := LLVMBuildOr(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildOr(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.BitwiseXor(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.BitwiseXor(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('BitwiseXor');
   
-  Result := LLVMBuildXor(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildXor(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ShiftLeft(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.ShiftLeft(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('ShiftLeft');
   
-  Result := LLVMBuildShl(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildShl(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.LShr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.LShr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('LShr');
   
-  Result := LLVMBuildLShr(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildLShr(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.AShr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.AShr(const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('AShr');
   
-  Result := LLVMBuildAShr(FBuilder, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildAShr(FBuilder, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ROL(const AValue: LLVMValueRef; const AAmount: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.ROL(const AValue: LLVMValueRef; const AAmount: LLVMValueRef): LLVMValueRef;
 var
   LModule: LLVMModuleRef;
   LIntrinsic: LLVMValueRef;
@@ -1025,10 +1026,10 @@ begin
   LArgs[2] := AAmount;
   
   Result := LLVMBuildCall2(FBuilder, LLVMGlobalGetValueType(LIntrinsic), 
-    LIntrinsic, @LArgs[0], 3, ELAsUTF8(GetNextRegister()));
+    LIntrinsic, @LArgs[0], 3, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ROR(const AValue: LLVMValueRef; const AAmount: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.ROR(const AValue: LLVMValueRef; const AAmount: LLVMValueRef): LLVMValueRef;
 var
   LModule: LLVMModuleRef;
   LIntrinsic: LLVMValueRef;
@@ -1053,108 +1054,108 @@ begin
   LArgs[2] := AAmount;
   
   Result := LLVMBuildCall2(FBuilder, LLVMGlobalGetValueType(LIntrinsic),
-    LIntrinsic, @LArgs[0], 3, ELAsUTF8(GetNextRegister()));
+    LIntrinsic, @LArgs[0], 3, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ICmp(const ACondition: LLVMIntPredicate; const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.ICmp(const ACondition: LLVMIntPredicate; const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('ICmp');
   
-  Result := LLVMBuildICmp(FBuilder, ACondition, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildICmp(FBuilder, ACondition, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FCmp(const ACondition: LLVMRealPredicate; const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.FCmp(const ACondition: LLVMRealPredicate; const ALeft: LLVMValueRef; const ARight: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('FCmp');
   
-  Result := LLVMBuildFCmp(FBuilder, ACondition, ALeft, ARight, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFCmp(FBuilder, ACondition, ALeft, ARight, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.Trunc(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.Trunc(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('Trunc');
   
-  Result := LLVMBuildTrunc(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildTrunc(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.ZExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.ZExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('ZExt');
   
-  Result := LLVMBuildZExt(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildZExt(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.SExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.SExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('SExt');
   
-  Result := LLVMBuildSExt(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSExt(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FPTrunc(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.FPTrunc(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('FPTrunc');
   
-  Result := LLVMBuildFPTrunc(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFPTrunc(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FPExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.FPExt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('FPExt');
   
-  Result := LLVMBuildFPExt(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFPExt(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FPToUI(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.FPToUI(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('FPToUI');
   
-  Result := LLVMBuildFPToUI(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFPToUI(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.FPToSI(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.FPToSI(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('FPToSI');
   
-  Result := LLVMBuildFPToSI(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildFPToSI(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.UIToFP(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.UIToFP(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('UIToFP');
   
-  Result := LLVMBuildUIToFP(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildUIToFP(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.SIToFP(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.SIToFP(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('SIToFP');
 
-  Result := LLVMBuildSIToFP(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSIToFP(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.PtrToInt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.PtrToInt(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('PtrToInt');
   
-  Result := LLVMBuildPtrToInt(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildPtrToInt(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.IntToPtr(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.IntToPtr(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('IntToPtr');
   
-  Result := LLVMBuildIntToPtr(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildIntToPtr(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.BitCast(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.BitCast(const AValue: LLVMValueRef; const ATargetType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('BitCast');
   
-  Result := LLVMBuildBitCast(FBuilder, AValue, ATargetType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildBitCast(FBuilder, AValue, ATargetType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.Br(const ATarget: LLVMBasicBlockRef): TELIRContext;
+function TCPIRContext.Br(const ATarget: LLVMBasicBlockRef): TCPIRContext;
 begin
   ValidateBlockState('Br');
   
@@ -1163,7 +1164,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.CondBr(const ACondition: LLVMValueRef; const ATrueTarget: LLVMBasicBlockRef; const AFalseTarget: LLVMBasicBlockRef): TELIRContext;
+function TCPIRContext.CondBr(const ACondition: LLVMValueRef; const ATrueTarget: LLVMBasicBlockRef; const AFalseTarget: LLVMBasicBlockRef): TCPIRContext;
 begin
   ValidateBlockState('CondBr');
   
@@ -1172,14 +1173,14 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.Switch(const AValue: LLVMValueRef; const ADefaultTarget: LLVMBasicBlockRef): LLVMValueRef;
+function TCPIRContext.Switch(const AValue: LLVMValueRef; const ADefaultTarget: LLVMBasicBlockRef): LLVMValueRef;
 begin
   ValidateBlockState('Switch');
   
   Result := LLVMBuildSwitch(FBuilder, AValue, ADefaultTarget, 0);
 end;
 
-function TELIRContext.AddSwitchCase(const ASwitchInst: LLVMValueRef; const AValue: LLVMValueRef; const ATarget: LLVMBasicBlockRef): TELIRContext;
+function TCPIRContext.AddSwitchCase(const ASwitchInst: LLVMValueRef; const AValue: LLVMValueRef; const ATarget: LLVMBasicBlockRef): TCPIRContext;
 begin
   ValidateBlockState('AddSwitchCase');
   
@@ -1188,7 +1189,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.Ret(const AValue: LLVMValueRef): TELIRContext;
+function TCPIRContext.Ret(const AValue: LLVMValueRef): TCPIRContext;
 begin
   ValidateBlockState('Ret');
   
@@ -1200,7 +1201,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.RetVoid: TELIRContext;
+function TCPIRContext.RetVoid: TCPIRContext;
 begin
   ValidateBlockState('RetVoid');
   
@@ -1209,14 +1210,14 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.Phi(const AType: LLVMTypeRef): LLVMValueRef;
+function TCPIRContext.Phi(const AType: LLVMTypeRef): LLVMValueRef;
 begin
   ValidateBlockState('Phi');
   
-  Result := LLVMBuildPhi(FBuilder, AType, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildPhi(FBuilder, AType, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.AddPhiIncoming(const APhiNode: LLVMValueRef; const AValue: LLVMValueRef; const ABlock: LLVMBasicBlockRef): TELIRContext;
+function TCPIRContext.AddPhiIncoming(const APhiNode: LLVMValueRef; const AValue: LLVMValueRef; const ABlock: LLVMBasicBlockRef): TCPIRContext;
 var
   LValues: array[0..0] of LLVMValueRef;
   LBlocks: array[0..0] of LLVMBasicBlockRef;
@@ -1231,7 +1232,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.Call(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef;
+function TCPIRContext.Call(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef;
   const ACallingConv: LLVMCallConv): LLVMValueRef;
 var
   LArgsArray: array of LLVMValueRef;
@@ -1247,15 +1248,15 @@ begin
   LFunctionType := GetFunctionType(AFunction);
     
   if Length(LArgsArray) > 0 then
-    Result := LLVMBuildCall2(FBuilder, LFunctionType, AFunction, @LArgsArray[0], Length(LArgsArray), ELAsUTF8(GetNextRegister()))
+    Result := LLVMBuildCall2(FBuilder, LFunctionType, AFunction, @LArgsArray[0], Length(LArgsArray), CPAsUTF8(GetNextRegister()))
   else
-    Result := LLVMBuildCall2(FBuilder, LFunctionType, AFunction, nil, 0, ELAsUTF8(GetNextRegister()));
+    Result := LLVMBuildCall2(FBuilder, LFunctionType, AFunction, nil, 0, CPAsUTF8(GetNextRegister()));
     
   LLVMSetInstructionCallConv(Result, ACallingConv);
 end;
 
-function TELIRContext.CallVoid(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef;
-  const ACallingConv: LLVMCallConv): TELIRContext;
+function TCPIRContext.CallVoid(const AFunction: LLVMValueRef; const AArgs: array of LLVMValueRef;
+  const ACallingConv: LLVMCallConv): TCPIRContext;
 var
   LArgsArray: array of LLVMValueRef;
   LCallInst: LLVMValueRef;
@@ -1280,7 +1281,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.IndirectCall(const AFunctionPtr: LLVMValueRef; const AFunctionType: LLVMTypeRef; const AArgs: array of LLVMValueRef;
+function TCPIRContext.IndirectCall(const AFunctionPtr: LLVMValueRef; const AFunctionType: LLVMTypeRef; const AArgs: array of LLVMValueRef;
   const ACallingConv: LLVMCallConv): LLVMValueRef;
 var
   LArgsArray: array of LLVMValueRef;
@@ -1293,21 +1294,21 @@ begin
     LArgsArray[I] := AArgs[I];
     
   if Length(LArgsArray) > 0 then
-    Result := LLVMBuildCall2(FBuilder, AFunctionType, AFunctionPtr, @LArgsArray[0], Length(LArgsArray), ELAsUTF8(GetNextRegister()))
+    Result := LLVMBuildCall2(FBuilder, AFunctionType, AFunctionPtr, @LArgsArray[0], Length(LArgsArray), CPAsUTF8(GetNextRegister()))
   else
-    Result := LLVMBuildCall2(FBuilder, AFunctionType, AFunctionPtr, nil, 0, ELAsUTF8(GetNextRegister()));
+    Result := LLVMBuildCall2(FBuilder, AFunctionType, AFunctionPtr, nil, 0, CPAsUTF8(GetNextRegister()));
     
   LLVMSetInstructionCallConv(Result, ACallingConv);
 end;
 
-function TELIRContext.Select(const ACondition: LLVMValueRef; const ATrueValue: LLVMValueRef; const AFalseValue: LLVMValueRef): LLVMValueRef;
+function TCPIRContext.Select(const ACondition: LLVMValueRef; const ATrueValue: LLVMValueRef; const AFalseValue: LLVMValueRef): LLVMValueRef;
 begin
   ValidateBlockState('Select');
 
-  Result := LLVMBuildSelect(FBuilder, ACondition, ATrueValue, AFalseValue, ELAsUTF8(GetNextRegister()));
+  Result := LLVMBuildSelect(FBuilder, ACondition, ATrueValue, AFalseValue, CPAsUTF8(GetNextRegister()));
 end;
 
-function TELIRContext.InlineAsm(const AFunctionType: LLVMTypeRef; const AAsmCode: string; const AConstraints: string;
+function TCPIRContext.InlineAsm(const AFunctionType: LLVMTypeRef; const AAsmCode: string; const AConstraints: string;
   const AHasSideEffects: Boolean; const AIsAlignStack: Boolean): LLVMValueRef;
 begin
   ValidateBlockState('InlineAsm');
@@ -1317,7 +1318,7 @@ begin
     LLVMBool(IfThen(AHasSideEffects, 1, 0)), LLVMBool(IfThen(AIsAlignStack, 1, 0)), LLVMInlineAsmDialectATT, LLVMBool(0));
 end;
 
-function TELIRContext.MemCpy(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TELIRContext;
+function TCPIRContext.MemCpy(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TCPIRContext;
 begin
   ValidateBlockState('MemCpy');
   
@@ -1326,7 +1327,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.MemSet(const ADest: LLVMValueRef; const AValue: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TELIRContext;
+function TCPIRContext.MemSet(const ADest: LLVMValueRef; const AValue: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TCPIRContext;
 begin
   ValidateBlockState('MemSet');
   
@@ -1335,7 +1336,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.MemMove(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TELIRContext;
+function TCPIRContext.MemMove(const ADest: LLVMValueRef; const ASource: LLVMValueRef; const ASize: LLVMValueRef; const AAlign: Integer): TCPIRContext;
 begin
   ValidateBlockState('MemMove');
   
@@ -1344,7 +1345,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.Comment(const AComment: string): TELIRContext;
+function TCPIRContext.Comment(const AComment: string): TCPIRContext;
 begin
   // LLVM API doesn't directly support comments in IR
   // Comments are typically added during text generation
@@ -1353,7 +1354,7 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.GetStringReference(const AValue: string): LLVMValueRef;
+function TCPIRContext.GetStringReference(const AValue: string): LLVMValueRef;
 var
   LStringGlobal: LLVMValueRef;
   LStringType: LLVMTypeRef;
@@ -1369,18 +1370,18 @@ begin
   Result := LLVMConstGEP2(LStringType, LStringGlobal, @LIndices[0], 2);
 end;
 
-function TELIRContext.GetModule: LLVMModuleRef;
+function TCPIRContext.GetModule: LLVMModuleRef;
 begin
   Result := FModule;
 end;
 
-function TELIRContext.ExtractModule: LLVMModuleRef;
+function TCPIRContext.ExtractModule: LLVMModuleRef;
 begin
   Result := FModule;
   FModule := nil; // Transfer ownership to caller
 end;
 
-function TELIRContext.Clear: TELIRContext;
+function TCPIRContext.Clear: TCPIRContext;
 begin
   FStringConstants.Clear;
   FCurrentFunction := nil;
@@ -1398,12 +1399,12 @@ begin
   Result := Self;
 end;
 
-function TELIRContext.GetFunctionType(const AFunction: LLVMValueRef): LLVMTypeRef;
+function TCPIRContext.GetFunctionType(const AFunction: LLVMValueRef): LLVMTypeRef;
 begin
   Result := LLVMGlobalGetValueType(AFunction);
 end;
 
-function TELIRContext.GetIR: string;
+function TCPIRContext.GetIR: string;
 var
   LIRString: PUTF8Char;
 begin

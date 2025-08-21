@@ -1,18 +1,22 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Compiler;
+unit CPLang.Compiler;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
@@ -20,21 +24,21 @@ uses
   System.SysUtils,
   System.Diagnostics,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Include,
-  ELang.Lexer,
-  ELang.Parser,
-  ELang.Types,
-  ELang.Symbols,
-  ELang.Semantic,
-  ELang.CodeGen,
-  ELang.SourceMap,
-  ELang.Errors,
-  ELang.LLVM;
+  CPLang.Common,
+  CPLang.Include,
+  CPLang.Lexer,
+  CPLang.Parser,
+  CPLang.Types,
+  CPLang.Symbols,
+  CPLang.Semantic,
+  CPLang.CodeGen,
+  CPLang.SourceMap,
+  CPLang.Errors,
+  CPLang.LLVM;
 
 type
-  { TELCompilationPhase }
-  TELCompilationPhase = (
+  { TCPCompilationPhase }
+  TCPCompilationPhase = (
     cpIncludeProcessing,
     cpLexicalAnalysis,
     cpSyntaxAnalysis,
@@ -43,12 +47,12 @@ type
     cpComplete
   );
 
-  { TELCompilationResult }
-  TELCompilationResult = class(TELObject)
+  { TCPCompilationResult }
+  TCPCompilationResult = class
   private
     FSuccess: Boolean;
-    FPhase: TELCompilationPhase;
-    FAST: TELASTNode;
+    FPhase: TCPCompilationPhase;
+    FAST: TCPASTNode;
     FGeneratedIR: string;
     FMergedSource: string;
     FTokenCount: Integer;
@@ -56,12 +60,12 @@ type
     FWarningCount: Integer;
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
     property Success: Boolean read FSuccess write FSuccess;
-    property Phase: TELCompilationPhase read FPhase write FPhase;
-    property AST: TELASTNode read FAST write FAST;
+    property Phase: TCPCompilationPhase read FPhase write FPhase;
+    property AST: TCPASTNode read FAST write FAST;
     property GeneratedIR: string read FGeneratedIR write FGeneratedIR;
     property MergedSource: string read FMergedSource write FMergedSource;
     property TokenCount: Integer read FTokenCount write FTokenCount;
@@ -69,8 +73,8 @@ type
     property WarningCount: Integer read FWarningCount write FWarningCount;
   end;
 
-  { TELProgressInfo }
-  TELProgressInfo = record
+  { TCPProgressInfo }
+  TCPProgressInfo = record
     PhaseDescription: string;
     OverallPercent: Integer;
     PhasePercent: Integer;
@@ -83,25 +87,25 @@ type
     IsComplete: Boolean;
   end;
 
-  { TELCompilerProgress }
-  TELCompilerProgress = reference to procedure(const AProgressInfo: TELProgressInfo);
+  { TCPCompilerProgress }
+  TCPCompilerProgress = reference to procedure(const AProgressInfo: TCPProgressInfo);
 
-  { TELCompiler }
-  TELCompiler = class(TELObject)
+  { TCPCompiler }
+  TCPCompiler = class
   private
-    FIncludeManager: TELIncludeManager;
-    FLexer: TELLexer;
-    FParser: TELParser;
-    FTypeManager: TELTypeManager;
-    FSemanticAnalyzer: TELSemanticAnalyzer;
-    FErrorCollector: TELErrorCollector;
+    FIncludeManager: TCPIncludeManager;
+    FLexer: TCPLexer;
+    FParser: TCPParser;
+    FTypeManager: TCPTypeManager;
+    FSemanticAnalyzer: TCPSemanticAnalyzer;
+    FErrorCollector: TCPErrorCollector;
     
-    FCurrentResult: TELCompilationResult;
-    FTokens: TArray<TELToken>;
+    FCurrentResult: TCPCompilationResult;
+    FTokens: TArray<TCPToken>;
     FMainFileName: string; // Store main filename for module name
     
     // Progress reporting fields
-    FProgressCallback: TELCompilerProgress;
+    FProgressCallback: TCPCompilerProgress;
     FOverallStopwatch: TStopwatch;
     FPhaseStopwatch: TStopwatch;
     FProgressUpdateInterval: Integer;
@@ -115,7 +119,7 @@ type
     function PerformSemanticAnalysis(): Boolean;
     function PerformCodeGeneration(): Boolean;
     {$HINTS OFF}
-    function CreateCompilationError(const AMessage: string; const AToken: TELToken): TELCompilerError;
+    function CreateCompilationError(const AMessage: string; const AToken: TCPToken): TCPCompilerError;
     {$HINTS ON}
     
     // Progress reporting methods
@@ -123,22 +127,26 @@ type
     function FormatElapsedTime(const AMilliseconds: Int64): string;
     function FormatEstimatedTime(const AMilliseconds: Int64): string;
     function CalculateOverallProgress(const APhaseProgress: Double): Integer;
-    function GetPhaseDescription(const APhase: TELCompilationPhase): string;
+    function GetPhaseDescription(const APhase: TCPCompilationPhase): string;
+    {$HINTS OFF}
     function FormatItemCount(const ACount: Integer; const AItemType: string): string;
-    function GetPhaseWeight(const APhase: TELCompilationPhase): Double;
-    procedure StartPhase(const APhase: TELCompilationPhase);
+    {$HINTS ON}
+    function GetPhaseWeight(const APhase: TCPCompilationPhase): Double;
+    procedure StartPhase(const APhase: TCPCompilationPhase);
+    {$HINTS OFF}
     procedure CheckProgressUpdate(const AItemsProcessed, ATotalItems: Integer; const ADetailMessage: string = '');
+    {$HINTS ON}
 
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
-    function CompileFile(const AFileName: string): TELCompilationResult;
-    function CompileSource(const ASource: string; const AFileName: string): TELCompilationResult;
+    function CompileFile(const AFileName: string): TCPCompilationResult;
+    function CompileSource(const ASource: string; const AFileName: string): TCPCompilationResult;
     
-    function GetErrors(): TArray<TELCompilerError>;
-    function GetWarnings(): TArray<TELCompilerError>;
-    function GetErrorsByPhase(const APhase: TELCompilationPhase): TArray<TELCompilerError>;
+    function GetErrors(): TArray<TCPCompilerError>;
+    function GetWarnings(): TArray<TCPCompilerError>;
+    function GetErrorsByPhase(const APhase: TCPCompilationPhase): TArray<TCPCompilerError>;
     
     function HasErrors(): Boolean;
     function HasWarnings(): Boolean;
@@ -146,29 +154,29 @@ type
     function WarningCount(): Integer;
     
     procedure ClearErrors();
-    function GetSourcePosition(const ACharIndex: Integer): TELSourcePosition;
+    function GetSourcePosition(const ACharIndex: Integer): TCPSourcePosition;
     function GetSourceLine(const ACharIndex: Integer): string;
     
     // Access to internal components (for advanced usage)
-    property IncludeManager: TELIncludeManager read FIncludeManager;
-    property TypeManager: TELTypeManager read FTypeManager;
-    property SemanticAnalyzer: TELSemanticAnalyzer read FSemanticAnalyzer;
-    property ErrorCollector: TELErrorCollector read FErrorCollector;
-    property OnProgress: TELCompilerProgress read FProgressCallback write FProgressCallback;
+    property IncludeManager: TCPIncludeManager read FIncludeManager;
+    property TypeManager: TCPTypeManager read FTypeManager;
+    property SemanticAnalyzer: TCPSemanticAnalyzer read FSemanticAnalyzer;
+    property ErrorCollector: TCPErrorCollector read FErrorCollector;
+    property OnProgress: TCPCompilerProgress read FProgressCallback write FProgressCallback;
   end;
 
-{ Convenience functions }
-function ELCompileFile(const AFileName: string): TELCompilationResult;
-function ELCompileSource(const ASource: string; const AFileName: string = '<source>'): TELCompilationResult;
+{ Routines }
+function CPCompileFile(const AFileName: string): TCPCompilationResult;
+function CPCompileSource(const ASource: string; const AFileName: string = '<source>'): TCPCompilationResult;
 
 implementation
 
-{ Convenience functions }
-function ELCompileFile(const AFileName: string): TELCompilationResult;
+{ Routines }
+function CPCompileFile(const AFileName: string): TCPCompilationResult;
 var
-  LCompiler: TELCompiler;
+  LCompiler: TCPCompiler;
 begin
-  LCompiler := TELCompiler.Create();
+  LCompiler := TCPCompiler.Create();
   try
     Result := LCompiler.CompileFile(AFileName);
   finally
@@ -176,11 +184,11 @@ begin
   end;
 end;
 
-function ELCompileSource(const ASource: string; const AFileName: string): TELCompilationResult;
+function CPCompileSource(const ASource: string; const AFileName: string): TCPCompilationResult;
 var
-  LCompiler: TELCompiler;
+  LCompiler: TCPCompiler;
 begin
-  LCompiler := TELCompiler.Create();
+  LCompiler := TCPCompiler.Create();
   try
     Result := LCompiler.CompileSource(ASource, AFileName);
   finally
@@ -188,9 +196,8 @@ begin
   end;
 end;
 
-{ TELCompilationResult }
-
-constructor TELCompilationResult.Create();
+{ TCPCompilationResult }
+constructor TCPCompilationResult.Create();
 begin
   inherited;
   FSuccess := False;
@@ -203,7 +210,7 @@ begin
   FWarningCount := 0;
 end;
 
-destructor TELCompilationResult.Destroy();
+destructor TCPCompilationResult.Destroy();
 begin
   FAST.Free();
   inherited;
@@ -211,7 +218,7 @@ end;
 
 { Progress reporting methods }
 
-function TELCompiler.GetPhaseWeight(const APhase: TELCompilationPhase): Double;
+function TCPCompiler.GetPhaseWeight(const APhase: TCPCompilationPhase): Double;
 begin
   if APhase = cpIncludeProcessing then
     Result := 0.10
@@ -229,7 +236,7 @@ begin
     Result := 0.0;
 end;
 
-function TELCompiler.GetPhaseDescription(const APhase: TELCompilationPhase): string;
+function TCPCompiler.GetPhaseDescription(const APhase: TCPCompilationPhase): string;
 begin
   if APhase = cpIncludeProcessing then
     Result := 'Include Processing'
@@ -247,7 +254,7 @@ begin
     Result := 'Unknown';
 end;
 
-function TELCompiler.FormatElapsedTime(const AMilliseconds: Int64): string;
+function TCPCompiler.FormatElapsedTime(const AMilliseconds: Int64): string;
 var
   LSeconds: Integer;
   LMinutes: Integer;
@@ -263,7 +270,7 @@ begin
   end;
 end;
 
-function TELCompiler.FormatEstimatedTime(const AMilliseconds: Int64): string;
+function TCPCompiler.FormatEstimatedTime(const AMilliseconds: Int64): string;
 var
   LSeconds: Integer;
   LMinutes: Integer;
@@ -288,7 +295,7 @@ begin
   end;
 end;
 
-function TELCompiler.FormatItemCount(const ACount: Integer; const AItemType: string): string;
+function TCPCompiler.FormatItemCount(const ACount: Integer; const AItemType: string): string;
 begin
   if ACount >= 1000 then
     Result := Format('%s %s', [FormatFloat('#,##0', ACount), AItemType])
@@ -296,7 +303,7 @@ begin
     Result := Format('%d %s', [ACount, AItemType]);
 end;
 
-function TELCompiler.CalculateOverallProgress(const APhaseProgress: Double): Integer;
+function TCPCompiler.CalculateOverallProgress(const APhaseProgress: Double): Integer;
 var
   LOverallProgress: Double;
 begin
@@ -306,7 +313,7 @@ begin
     Result := 100;
 end;
 
-procedure TELCompiler.StartPhase(const APhase: TELCompilationPhase);
+procedure TCPCompiler.StartPhase(const APhase: TCPCompilationPhase);
 begin
   // Update current phase info
   FCurrentPhaseWeight := GetPhaseWeight(APhase);
@@ -331,32 +338,34 @@ begin
   ReportProgress(0.0, 'Starting ' + GetPhaseDescription(APhase).ToLower());
 end;
 
-procedure TELCompiler.ReportProgress(const APhaseProgress: Double; const ADetailMessage: string);
+procedure TCPCompiler.ReportProgress(const APhaseProgress: Double; const ADetailMessage: string);
 var
-  LProgressInfo: TELProgressInfo;
+  LProgressInfo: TCPProgressInfo;
   LPhasePercent: Integer;
+  LElapsedMs: Int64;
+  LEstimatedTotal: Int64;
+  LEstimatedRemaining: Int64;
 begin
   if not Assigned(FProgressCallback) then
     Exit;
-    
+
   // Calculate percentages
   LPhasePercent := Round(APhaseProgress * 100);
   if LPhasePercent > 100 then
     LPhasePercent := 100;
-    
+
   // Fill progress info record
   LProgressInfo.PhaseDescription := GetPhaseDescription(FCurrentResult.Phase);
   LProgressInfo.OverallPercent := CalculateOverallProgress(APhaseProgress);
   LProgressInfo.PhasePercent := LPhasePercent;
   LProgressInfo.ElapsedTime := FormatElapsedTime(FOverallStopwatch.ElapsedMilliseconds);
-  
+
   // Calculate estimated remaining time
   if LProgressInfo.OverallPercent > 0 then
   begin
-    var LRemainingProgress: Double := (100 - LProgressInfo.OverallPercent) / 100.0;
-    var LElapsedMs: Int64 := FOverallStopwatch.ElapsedMilliseconds;
-    var LEstimatedTotal: Int64 := Round(LElapsedMs / (LProgressInfo.OverallPercent / 100.0));
-    var LEstimatedRemaining: Int64 := LEstimatedTotal - LElapsedMs;
+    LElapsedMs := FOverallStopwatch.ElapsedMilliseconds;
+    LEstimatedTotal := Round(LElapsedMs / (LProgressInfo.OverallPercent / 100.0));
+    LEstimatedRemaining := LEstimatedTotal - LElapsedMs;
     LProgressInfo.EstimatedRemaining := FormatEstimatedTime(LEstimatedRemaining);
   end
   else
@@ -372,7 +381,7 @@ begin
   FProgressCallback(LProgressInfo);
 end;
 
-procedure TELCompiler.CheckProgressUpdate(const AItemsProcessed, ATotalItems: Integer; const ADetailMessage: string);
+procedure TCPCompiler.CheckProgressUpdate(const AItemsProcessed, ATotalItems: Integer; const ADetailMessage: string);
 var
   LCurrentTicks: Int64;
   LPhaseProgress: Double;
@@ -403,15 +412,15 @@ end;
 
 { TELCompiler }
 
-constructor TELCompiler.Create();
+constructor TCPCompiler.Create();
 begin
   inherited;
-  FIncludeManager := TELIncludeManager.Create();
-  FLexer := TELLexer.Create();
-  FParser := TELParser.Create();
-  FTypeManager := TELTypeManager.Create();
-  FErrorCollector := TELErrorCollector.Create();
-  FSemanticAnalyzer := TELSemanticAnalyzer.Create(FTypeManager, FErrorCollector, FIncludeManager.SourceMapper);
+  FIncludeManager := TCPIncludeManager.Create();
+  FLexer := TCPLexer.Create();
+  FParser := TCPParser.Create();
+  FTypeManager := TCPTypeManager.Create();
+  FErrorCollector := TCPErrorCollector.Create();
+  FSemanticAnalyzer := TCPSemanticAnalyzer.Create(FTypeManager, FErrorCollector, FIncludeManager.SourceMapper, '');
 
   FCurrentResult := nil;
   FMainFileName := '';
@@ -428,7 +437,7 @@ begin
   FIncludeManager.AddIncludePath('.\include');
 end;
 
-destructor TELCompiler.Destroy();
+destructor TCPCompiler.Destroy();
 begin
   FSemanticAnalyzer.Free();
   FErrorCollector.Free();
@@ -439,12 +448,12 @@ begin
   inherited;
 end;
 
-function TELCompiler.CompileFile(const AFileName: string): TELCompilationResult;
+function TCPCompiler.CompileFile(const AFileName: string): TCPCompilationResult;
 var
-  LUnusedWarnings: TArray<TELCompilerError>;
-  LWarning: TELCompilerError;
+  LUnusedWarnings: TArray<TCPCompilerError>;
+  LWarning: TCPCompilerError;
 begin
-  Result := TELCompilationResult.Create();
+  Result := TCPCompilationResult.Create();
   FCurrentResult := Result;
   FMainFileName := AFileName; // Store filename for module name
   
@@ -500,7 +509,7 @@ begin
     begin
       // Convert unhandled exceptions to compiler errors
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Internal compiler error: ' + E.Message,
           'Internal',
           AFileName,
@@ -517,13 +526,13 @@ begin
   Result.WarningCount := FErrorCollector.WarningCount();
 end;
 
-function TELCompiler.CompileSource(const ASource: string; const AFileName: string): TELCompilationResult;
+function TCPCompiler.CompileSource(const ASource: string; const AFileName: string): TCPCompilationResult;
 var
-  LUnusedWarnings: TArray<TELCompilerError>;
-  LWarning: TELCompilerError;
+  LUnusedWarnings: TArray<TCPCompilerError>;
+  LWarning: TCPCompilerError;
 begin
   // For source compilation, we skip include processing
-  Result := TELCompilationResult.Create();
+  Result := TCPCompilationResult.Create();
   FCurrentResult := Result;
   FMainFileName := AFileName; // Store filename for module name
   
@@ -537,7 +546,7 @@ begin
     // Phase 2: Lexical Analysis
     Result.Phase := cpLexicalAnalysis;
     StartPhase(cpLexicalAnalysis);
-    FLexer.SetSource(ASource, nil); // No source mapper for direct source
+    FLexer.SetSource(ASource, nil, AFileName); // No source mapper for direct source
     FTokens := FLexer.TokenizeAll();
     Result.TokenCount := Length(FTokens);
     
@@ -579,7 +588,7 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Internal compiler error: ' + E.Message,
           'Internal',
           AFileName,
@@ -595,7 +604,7 @@ begin
   Result.WarningCount := FErrorCollector.WarningCount();
 end;
 
-function TELCompiler.ProcessIncludes(const AMainFileName: string): Boolean;
+function TCPCompiler.ProcessIncludes(const AMainFileName: string): Boolean;
 begin
   Result := False;
   
@@ -603,10 +612,10 @@ begin
     FCurrentResult.MergedSource := FIncludeManager.ProcessMainFile(AMainFileName);
     Result := True;
   except
-    on E: EELException do
+    on E: ECPException do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           E.Message,
           'Include',
           AMainFileName,
@@ -618,7 +627,7 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Include processing failed: ' + E.Message,
           'Include',
           AMainFileName,
@@ -630,12 +639,12 @@ begin
   end;
 end;
 
-function TELCompiler.PerformLexicalAnalysis(): Boolean;
+function TCPCompiler.PerformLexicalAnalysis(): Boolean;
 begin
   Result := False;
   
   try
-    FLexer.SetSource(FCurrentResult.MergedSource, FIncludeManager.SourceMapper);
+    FLexer.SetSource(FCurrentResult.MergedSource, FIncludeManager.SourceMapper, FMainFileName);
     FTokens := FLexer.TokenizeAll();
     FCurrentResult.TokenCount := Length(FTokens);
     Result := True;
@@ -643,10 +652,10 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Lexical analysis failed: ' + E.Message,
           'Lexical',
-          '<unknown>',
+          FMainFileName,
           0, 0,
           esError
         )
@@ -655,9 +664,9 @@ begin
   end;
 end;
 
-function TELCompiler.PerformSyntaxAnalysis(): Boolean;
+function TCPCompiler.PerformSyntaxAnalysis(): Boolean;
 var
-  LAST: TELASTNode;
+  LAST: TCPASTNode;
 begin
   Result := False;
   
@@ -666,7 +675,7 @@ begin
     FCurrentResult.AST := LAST;
     Result := True;
   except
-    on E: EELException do
+    on E: ECPException do
     begin
       // Use source position from the exception
       FErrorCollector.AddParseError(
@@ -681,7 +690,7 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Syntax analysis failed: ' + E.Message,
           'Syntax',
           '<unknown>',
@@ -693,7 +702,7 @@ begin
   end;
 end;
 
-function TELCompiler.PerformSemanticAnalysis(): Boolean;
+function TCPCompiler.PerformSemanticAnalysis(): Boolean;
 begin
   Result := False;
   
@@ -701,16 +710,19 @@ begin
     if not Assigned(FCurrentResult.AST) then
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'No AST generated - syntax analysis failed',
           'Semantic',
-          '<unknown>',
+          FMainFileName,
           0, 0,
           esError
         )
       );
       Exit;
     end;
+    
+    // Set the main filename for proper error reporting
+    FSemanticAnalyzer.SetMainFileName(FMainFileName);
     
     // Perform comprehensive semantic analysis
     Result := FSemanticAnalyzer.Analyze(FCurrentResult.AST);
@@ -721,13 +733,13 @@ begin
       FErrorCollector.AddSemanticError(
         'Program must have a main function', 
         'main', 
-        '<unknown>', 0, 0
+        FMainFileName, 0, 0
       );
       Result := False;
     end;
     
   except
-    on E: EELException do
+    on E: ECPException do
     begin
       FErrorCollector.AddSemanticError(
         E.Message,
@@ -741,10 +753,10 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Semantic analysis failed: ' + E.Message,
           'Semantic',
-          '<unknown>',
+          FMainFileName,
           0, 0,
           esError
         )
@@ -754,9 +766,9 @@ begin
   end;
 end;
 
-function TELCompiler.PerformCodeGeneration(): Boolean;
+function TCPCompiler.PerformCodeGeneration(): Boolean;
 var
-  LCodeGen: TELCodeGen;
+  LCodeGen: TCPCodeGen;
   LGeneratedIR: string;
   LModuleName: string;
 begin
@@ -766,10 +778,10 @@ begin
     if not Assigned(FCurrentResult.AST) then
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'No AST available for code generation',
           'CodeGen',
-          '<unknown>',
+          FMainFileName,
           0, 0,
           esError
         )
@@ -783,7 +795,7 @@ begin
     else
       LModuleName := 'elang_module';
     
-    LCodeGen := TELCodeGen.Create(FTypeManager, FSemanticAnalyzer.SymbolTable, FErrorCollector, LModuleName);
+    LCodeGen := TCPCodeGen.Create(FErrorCollector, LModuleName);
     try
       LGeneratedIR := LCodeGen.Generate(FCurrentResult.AST);
       FCurrentResult.GeneratedIR := LGeneratedIR; // Store generated IR text
@@ -796,10 +808,10 @@ begin
     on E: Exception do
     begin
       FErrorCollector.AddError(
-        TELCompilerError.Create(
+        TCPCompilerError.Create(
           'Code generation failed: ' + E.Message,
           'CodeGen',
-          '<unknown>',
+          FMainFileName,
           0, 0,
           esError
         )
@@ -808,9 +820,9 @@ begin
   end;
 end;
 
-function TELCompiler.CreateCompilationError(const AMessage: string; const AToken: TELToken): TELCompilerError;
+function TCPCompiler.CreateCompilationError(const AMessage: string; const AToken: TCPToken): TCPCompilerError;
 begin
-  Result := TELCompilerError.Create(
+  Result := TCPCompilerError.Create(
     AMessage,
     'Compilation',
     AToken.SourcePos.FileName,
@@ -820,17 +832,17 @@ begin
   );
 end;
 
-function TELCompiler.GetErrors(): TArray<TELCompilerError>;
+function TCPCompiler.GetErrors(): TArray<TCPCompilerError>;
 begin
   Result := FErrorCollector.GetErrors();
 end;
 
-function TELCompiler.GetWarnings(): TArray<TELCompilerError>;
+function TCPCompiler.GetWarnings(): TArray<TCPCompilerError>;
 begin
   Result := FErrorCollector.GetWarnings();
 end;
 
-function TELCompiler.GetErrorsByPhase(const APhase: TELCompilationPhase): TArray<TELCompilerError>;
+function TCPCompiler.GetErrorsByPhase(const APhase: TCPCompilationPhase): TArray<TCPCompilerError>;
 var
   LPhaseName: string;
 begin
@@ -850,37 +862,37 @@ begin
   Result := FErrorCollector.GetErrorsByCategory(LPhaseName);
 end;
 
-function TELCompiler.HasErrors(): Boolean;
+function TCPCompiler.HasErrors(): Boolean;
 begin
   Result := FErrorCollector.HasErrors();
 end;
 
-function TELCompiler.HasWarnings(): Boolean;
+function TCPCompiler.HasWarnings(): Boolean;
 begin
   Result := FErrorCollector.HasWarnings();
 end;
 
-function TELCompiler.ErrorCount(): Integer;
+function TCPCompiler.ErrorCount(): Integer;
 begin
   Result := FErrorCollector.ErrorCount();
 end;
 
-function TELCompiler.WarningCount(): Integer;
+function TCPCompiler.WarningCount(): Integer;
 begin
   Result := FErrorCollector.WarningCount();
 end;
 
-procedure TELCompiler.ClearErrors();
+procedure TCPCompiler.ClearErrors();
 begin
   FErrorCollector.Clear();
 end;
 
-function TELCompiler.GetSourcePosition(const ACharIndex: Integer): TELSourcePosition;
+function TCPCompiler.GetSourcePosition(const ACharIndex: Integer): TCPSourcePosition;
 begin
   Result := FIncludeManager.GetSourcePosition(ACharIndex);
 end;
 
-function TELCompiler.GetSourceLine(const ACharIndex: Integer): string;
+function TCPCompiler.GetSourceLine(const ACharIndex: Integer): string;
 begin
   Result := FIncludeManager.GetSourceLine(ACharIndex);
 end;

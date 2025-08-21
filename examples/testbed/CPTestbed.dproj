@@ -6,10 +6,10 @@
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
-        <ProjectName Condition="'$(ProjectName)'==''">ELTestbed</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">CPTestbed</ProjectName>
         <TargetedPlatforms>2</TargetedPlatforms>
         <AppType>Console</AppType>
-        <MainSource>ELTestbed.dpr</MainSource>
+        <MainSource>CPTestbed.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -61,7 +61,7 @@
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <SanitizedProjectName>ELTestbed</SanitizedProjectName>
+        <SanitizedProjectName>CPTestbed</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>RaizeComponentsVcl;vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;SVGIconImageListRestClient;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;JclVcl;soapmidas;SVGIconImageListFMX;vclactnband;fmxFireDAC;dbexpress;Jcl;FireDACInfxDriver;DBXMySQLDriver;VclSmp;inet;DataSnapCommon;vcltouch;fmxase;DBXOdbcDriver;dbrtl;FireDACDBXDriver;Skia.Package.FMX;FireDACOracleDriver;fmxdae;FireDACMSAccDriver;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;JclDeveloperTools;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;Skia.Package.VCL;vcldb;JclContainers;vclFireDAC;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RaizeComponentsVclDb;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;DataSnapClient;DataSnapProviderClient;adortl;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;DatasnapConnectorsFreePascal;soaprtl;SVGIconImageList;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -83,9 +83,9 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-        <Manifest_File>(None)</Manifest_File>
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
-        <Icon_MainIcon>ELTestbed_Icon.ico</Icon_MainIcon>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <Icon_MainIcon>CPTestbed_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -117,23 +117,23 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="UELTestbed.pas"/>
-        <DCCReference Include="..\..\src\ELang.Common.pas"/>
-        <DCCReference Include="..\..\src\ELang.Compiler.pas"/>
-        <DCCReference Include="..\..\src\ELang.Errors.pas"/>
-        <DCCReference Include="..\..\src\ELang.Include.pas"/>
-        <DCCReference Include="..\..\src\ELang.IRContext.pas"/>
-        <DCCReference Include="..\..\src\ELang.JIT.pas"/>
-        <DCCReference Include="..\..\src\ELang.Lexer.pas"/>
-        <DCCReference Include="..\..\src\ELang.LLVM.pas"/>
-        <DCCReference Include="..\..\src\ELang.Parser.pas"/>
-        <DCCReference Include="..\..\src\ELang.Platform.pas"/>
-        <DCCReference Include="..\..\src\ELang.Resources.pas"/>
-        <DCCReference Include="..\..\src\ELang.Semantic.pas"/>
-        <DCCReference Include="..\..\src\ELang.SourceMap.pas"/>
-        <DCCReference Include="..\..\src\ELang.Symbols.pas"/>
-        <DCCReference Include="..\..\src\ELang.TypeChecker.pas"/>
-        <DCCReference Include="..\..\src\ELang.Types.pas"/>
-        <DCCReference Include="..\..\src\ELang.CodeGen.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Common.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Compiler.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Errors.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Include.pas"/>
+        <DCCReference Include="..\..\src\CPLang.IRContext.pas"/>
+        <DCCReference Include="..\..\src\CPLang.JIT.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Lexer.pas"/>
+        <DCCReference Include="..\..\src\CPLang.LLVM.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Parser.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Platform.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Resources.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Semantic.pas"/>
+        <DCCReference Include="..\..\src\CPLang.SourceMap.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Symbols.pas"/>
+        <DCCReference Include="..\..\src\CPLang.TypeChecker.pas"/>
+        <DCCReference Include="..\..\src\CPLang.Types.pas"/>
+        <DCCReference Include="..\..\src\CPLang.CodeGen.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -152,7 +152,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">ELTestbed.dpr</Source>
+                    <Source Name="MainSource">CPTestbed.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\bcboffice2k290.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
@@ -177,21 +177,21 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\bin\ELTestbed.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\bin\CPTestbed.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>ELTestbed.exe</RemoteName>
+                        <RemoteName>CPTestbed.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\bin\ELTestbed.rsm" Configuration="Debug" Class="DebugSymbols">
+                <DeployFile LocalName="..\..\bin\CPTestbed.rsm" Configuration="Debug" Class="DebugSymbols">
                     <Platform Name="Win64">
-                        <RemoteName>ELTestbed.rsm</RemoteName>
+                        <RemoteName>CPTestbed.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\ELTestbed.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\CPTestbed.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>ELTestbed.exe</RemoteName>
+                        <RemoteName>CPTestbed.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

@@ -1,32 +1,36 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Symbols;
+unit CPLang.Symbols;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Parser,
-  ELang.Types,
-  ELang.Errors;
+  CPLang.Common,
+  CPLang.Parser,
+  CPLang.Types,
+  CPLang.Errors;
 
 type
-  { TELSymbolKind }
-  TELSymbolKind = (
+  { TCPSymbolKind }
+  TCPSymbolKind = (
     skVariable,
     skFunction,
     skType,
@@ -34,13 +38,13 @@ type
     skConstant
   );
 
-  { TELSymbol }
-  TELSymbol = class
+  { TCPSymbol }
+  TCPSymbol = class
   private
     FName: string;
-    FKind: TELSymbolKind;
-    FSymbolType: TELType;
-    FDeclarationNode: TELASTNode;
+    FKind: TCPSymbolKind;
+    FSymbolType: TCPType;
+    FDeclarationNode: TCPASTNode;
     FDeclaredLine: Integer;
     FDeclaredColumn: Integer;
     FFileName: string;
@@ -48,17 +52,17 @@ type
     FIsInitialized: Boolean;
     
   public
-    constructor Create(const AName: string; const AKind: TELSymbolKind; 
-      const ASymbolType: TELType; const ADeclarationNode: TELASTNode);
+    constructor Create(const AName: string; const AKind: TCPSymbolKind;
+      const ASymbolType: TCPType; const ADeclarationNode: TCPASTNode);
     destructor Destroy(); override;
     
     function GetLocationString(): string;
     function GetKindString(): string;
     
     property SymbolName: string read FName;
-    property Kind: TELSymbolKind read FKind;
-    property SymbolType: TELType read FSymbolType write FSymbolType;
-    property DeclarationNode: TELASTNode read FDeclarationNode;
+    property Kind: TCPSymbolKind read FKind;
+    property SymbolType: TCPType read FSymbolType write FSymbolType;
+    property DeclarationNode: TCPASTNode read FDeclarationNode;
     property DeclaredLine: Integer read FDeclaredLine;
     property DeclaredColumn: Integer read FDeclaredColumn;
     property FileName: string read FFileName;
@@ -66,41 +70,41 @@ type
     property IsInitialized: Boolean read FIsInitialized write FIsInitialized;
   end;
 
-  { TELScope }
-  TELScope = class
+  { TCPScope }
+  TCPScope = class
   private
-    FParent: TELScope;
-    FSymbols: TObjectDictionary<string, TELSymbol>;
+    FParent: TCPScope;
+    FSymbols: TObjectDictionary<string, TCPSymbol>;
     FScopeType: string;
     FStartLine: Integer;
     FEndLine: Integer;
     
   public
-    constructor Create(const AParent: TELScope; const AScopeType: string);
+    constructor Create(const AParent: TCPScope; const AScopeType: string);
     destructor Destroy(); override;
     
-    function FindSymbol(const AName: string; const ASearchParent: Boolean = True): TELSymbol;
-    function FindLocalSymbol(const AName: string): TELSymbol;
-    procedure AddSymbol(const ASymbol: TELSymbol);
+    function FindSymbol(const AName: string; const ASearchParent: Boolean = True): TCPSymbol;
+    function FindLocalSymbol(const AName: string): TCPSymbol;
+    procedure AddSymbol(const ASymbol: TCPSymbol);
     function HasSymbol(const AName: string): Boolean;
     function GetSymbolCount(): Integer;
-    function GetSymbols(): TArray<TELSymbol>;
+    function GetSymbols(): TArray<TCPSymbol>;
     
-    property Parent: TELScope read FParent;
+    property Parent: TCPScope read FParent;
     property ScopeType: string read FScopeType;
     property StartLine: Integer read FStartLine write FStartLine;
     property EndLine: Integer read FEndLine write FEndLine;
   end;
 
-  { TELSymbolTable }
-  TELSymbolTable = class(TELObject)
+  { TCPSymbolTable }
+  TCPSymbolTable = class
   private
-    FCurrentScope: TELScope;
-    FGlobalScope: TELScope;
-    FScopeStack: TStack<TELScope>;
+    FCurrentScope: TCPScope;
+    FGlobalScope: TCPScope;
+    FScopeStack: TStack<TCPScope>;
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
     procedure EnterScope(const AScopeType: string);
@@ -108,27 +112,26 @@ type
     function GetCurrentScopeDepth(): Integer;
     function IsInGlobalScope(): Boolean;
     
-    function DeclareSymbol(const AName: string; const AKind: TELSymbolKind; 
-      const ASymbolType: TELType; const ADeclarationNode: TELASTNode): TELSymbol;
-    function LookupSymbol(const AName: string): TELSymbol;
-    function LookupLocalSymbol(const AName: string): TELSymbol;
+    function DeclareSymbol(const AName: string; const AKind: TCPSymbolKind;
+      const ASymbolType: TCPType; const ADeclarationNode: TCPASTNode): TCPSymbol;
+    function LookupSymbol(const AName: string): TCPSymbol;
+    function LookupLocalSymbol(const AName: string): TCPSymbol;
     
-    function CheckForRedeclaration(const AName: string; const ANode: TELASTNode): Boolean;
-    function GetAllSymbols(): TArray<TELSymbol>;
-    function GetUnusedSymbols(): TArray<TELSymbol>;
+    function CheckForRedeclaration(const AName: string; const ANode: TCPASTNode): Boolean;
+    function GetAllSymbols(): TArray<TCPSymbol>;
+    function GetUnusedSymbols(): TArray<TCPSymbol>;
     
     procedure Clear();
     
-    property CurrentScope: TELScope read FCurrentScope;
-    property GlobalScope: TELScope read FGlobalScope;
+    property CurrentScope: TCPScope read FCurrentScope;
+    property GlobalScope: TCPScope read FGlobalScope;
   end;
 
 implementation
 
-{ TELSymbol }
-
-constructor TELSymbol.Create(const AName: string; const AKind: TELSymbolKind; 
-  const ASymbolType: TELType; const ADeclarationNode: TELASTNode);
+{ TCPSymbol }
+constructor TCPSymbol.Create(const AName: string; const AKind: TCPSymbolKind;
+  const ASymbolType: TCPType; const ADeclarationNode: TCPASTNode);
 begin
   inherited Create();
   FName := AName;
@@ -152,14 +155,14 @@ begin
   end;
 end;
 
-destructor TELSymbol.Destroy();
+destructor TCPSymbol.Destroy();
 begin
   // Note: We don't free FSymbolType as it's managed by TypeManager
   // Note: We don't free FDeclarationNode as it's managed by Parser
   inherited;
 end;
 
-function TELSymbol.GetLocationString(): string;
+function TCPSymbol.GetLocationString(): string;
 begin
   if FFileName <> '' then
     Result := Format('%s(%d,%d)', [FFileName, FDeclaredLine, FDeclaredColumn])
@@ -167,7 +170,7 @@ begin
     Result := Format('Line %d, Column %d', [FDeclaredLine, FDeclaredColumn]);
 end;
 
-function TELSymbol.GetKindString(): string;
+function TCPSymbol.GetKindString(): string;
 begin
   case FKind of
     skVariable: Result := 'variable';
@@ -180,25 +183,24 @@ begin
   end;
 end;
 
-{ TELScope }
-
-constructor TELScope.Create(const AParent: TELScope; const AScopeType: string);
+{ TCPScope }
+constructor TCPScope.Create(const AParent: TCPScope; const AScopeType: string);
 begin
   inherited Create();
   FParent := AParent;
-  FSymbols := TObjectDictionary<string, TELSymbol>.Create([doOwnsValues]);
+  FSymbols := TObjectDictionary<string, TCPSymbol>.Create([doOwnsValues]);
   FScopeType := AScopeType;
   FStartLine := 0;
   FEndLine := 0;
 end;
 
-destructor TELScope.Destroy();
+destructor TCPScope.Destroy();
 begin
   FSymbols.Free();
   inherited;
 end;
 
-function TELScope.FindSymbol(const AName: string; const ASearchParent: Boolean): TELSymbol;
+function TCPScope.FindSymbol(const AName: string; const ASearchParent: Boolean): TCPSymbol;
 begin
   if FSymbols.TryGetValue(AName, Result) then
     Exit;
@@ -209,39 +211,39 @@ begin
     Result := nil;
 end;
 
-function TELScope.FindLocalSymbol(const AName: string): TELSymbol;
+function TCPScope.FindLocalSymbol(const AName: string): TCPSymbol;
 begin
   if not FSymbols.TryGetValue(AName, Result) then
     Result := nil;
 end;
 
-procedure TELScope.AddSymbol(const ASymbol: TELSymbol);
+procedure TCPScope.AddSymbol(const ASymbol: TCPSymbol);
 begin
   if not Assigned(ASymbol) then
-    raise EELException.Create('Cannot add nil symbol to scope');
+    raise ECPException.Create('Cannot add nil symbol to scope');
     
   if FSymbols.ContainsKey(ASymbol.SymbolName) then
-    raise EELException.Create('Symbol "%s" already exists in current scope', [ASymbol.SymbolName]);
+    raise ECPException.Create('Symbol "%s" already exists in current scope', [ASymbol.SymbolName]);
     
   FSymbols.Add(ASymbol.SymbolName, ASymbol);
 end;
 
-function TELScope.HasSymbol(const AName: string): Boolean;
+function TCPScope.HasSymbol(const AName: string): Boolean;
 begin
   Result := FSymbols.ContainsKey(AName);
 end;
 
-function TELScope.GetSymbolCount(): Integer;
+function TCPScope.GetSymbolCount(): Integer;
 begin
   Result := FSymbols.Count;
 end;
 
-function TELScope.GetSymbols(): TArray<TELSymbol>;
+function TCPScope.GetSymbols(): TArray<TCPSymbol>;
 var
-  LList: TList<TELSymbol>;
-  LPair: TPair<string, TELSymbol>;
+  LList: TList<TCPSymbol>;
+  LPair: TPair<string, TCPSymbol>;
 begin
-  LList := TList<TELSymbol>.Create();
+  LList := TList<TCPSymbol>.Create();
   try
     for LPair in FSymbols do
       LList.Add(LPair.Value);
@@ -251,17 +253,16 @@ begin
   end;
 end;
 
-{ TELSymbolTable }
-
-constructor TELSymbolTable.Create();
+{ TCPSymbolTable }
+constructor TCPSymbolTable.Create();
 begin
   inherited;
-  FScopeStack := TStack<TELScope>.Create();
-  FGlobalScope := TELScope.Create(nil, 'global');
+  FScopeStack := TStack<TCPScope>.Create();
+  FGlobalScope := TCPScope.Create(nil, 'global');
   FCurrentScope := FGlobalScope;
 end;
 
-destructor TELSymbolTable.Destroy();
+destructor TCPSymbolTable.Destroy();
 begin
   Clear();
   FGlobalScope.Free();
@@ -269,21 +270,21 @@ begin
   inherited;
 end;
 
-procedure TELSymbolTable.EnterScope(const AScopeType: string);
+procedure TCPSymbolTable.EnterScope(const AScopeType: string);
 var
-  LNewScope: TELScope;
+  LNewScope: TCPScope;
 begin
   FScopeStack.Push(FCurrentScope);
-  LNewScope := TELScope.Create(FCurrentScope, AScopeType);
+  LNewScope := TCPScope.Create(FCurrentScope, AScopeType);
   FCurrentScope := LNewScope;
 end;
 
-procedure TELSymbolTable.ExitScope();
+procedure TCPSymbolTable.ExitScope();
 var
-  LOldScope: TELScope;
+  LOldScope: TCPScope;
 begin
   if FScopeStack.Count = 0 then
-    raise EELException.Create('Cannot exit scope: already at global scope');
+    raise ECPException.Create('Cannot exit scope: already at global scope');
     
   LOldScope := FCurrentScope;
   FCurrentScope := FScopeStack.Pop();
@@ -292,56 +293,56 @@ begin
   LOldScope.Free();
 end;
 
-function TELSymbolTable.GetCurrentScopeDepth(): Integer;
+function TCPSymbolTable.GetCurrentScopeDepth(): Integer;
 begin
   Result := FScopeStack.Count;
 end;
 
-function TELSymbolTable.IsInGlobalScope(): Boolean;
+function TCPSymbolTable.IsInGlobalScope(): Boolean;
 begin
   Result := FCurrentScope = FGlobalScope;
 end;
 
-function TELSymbolTable.DeclareSymbol(const AName: string; const AKind: TELSymbolKind; 
-  const ASymbolType: TELType; const ADeclarationNode: TELASTNode): TELSymbol;
+function TCPSymbolTable.DeclareSymbol(const AName: string; const AKind: TCPSymbolKind;
+  const ASymbolType: TCPType; const ADeclarationNode: TCPASTNode): TCPSymbol;
 begin
   // Check for redeclaration in current scope only
   if FCurrentScope.HasSymbol(AName) then
   begin
-    raise EELException.Create('Symbol "%s" is already declared in current scope', [AName], 
+    raise ECPException.Create('Symbol "%s" is already declared in current scope', [AName],
       AName, '<unknown>', 0, 0);
   end;
   
-  Result := TELSymbol.Create(AName, AKind, ASymbolType, ADeclarationNode);
+  Result := TCPSymbol.Create(AName, AKind, ASymbolType, ADeclarationNode);
   FCurrentScope.AddSymbol(Result);
 end;
 
-function TELSymbolTable.LookupSymbol(const AName: string): TELSymbol;
+function TCPSymbolTable.LookupSymbol(const AName: string): TCPSymbol;
 begin
   Result := FCurrentScope.FindSymbol(AName, True);
 end;
 
-function TELSymbolTable.LookupLocalSymbol(const AName: string): TELSymbol;
+function TCPSymbolTable.LookupLocalSymbol(const AName: string): TCPSymbol;
 begin
   Result := FCurrentScope.FindLocalSymbol(AName);
 end;
 
-function TELSymbolTable.CheckForRedeclaration(const AName: string; const ANode: TELASTNode): Boolean;
+function TCPSymbolTable.CheckForRedeclaration(const AName: string; const ANode: TCPASTNode): Boolean;
 var
-  LExistingSymbol: TELSymbol;
+  LExistingSymbol: TCPSymbol;
 begin
   LExistingSymbol := FCurrentScope.FindLocalSymbol(AName);
   Result := Assigned(LExistingSymbol);
 end;
 
-function TELSymbolTable.GetAllSymbols(): TArray<TELSymbol>;
+function TCPSymbolTable.GetAllSymbols(): TArray<TCPSymbol>;
 var
-  LAllSymbols: TList<TELSymbol>;
-  LCurrentScope: TELScope;
-  LSymbols: TArray<TELSymbol>;
-  LSymbol: TELSymbol;
+  LAllSymbols: TList<TCPSymbol>;
+  LCurrentScope: TCPScope;
+  LSymbols: TArray<TCPSymbol>;
+  LSymbol: TCPSymbol;
 begin
-  LAllSymbols := TList<TELSymbol>.Create();
+  LAllSymbols := TList<TCPSymbol>.Create();
   try
     LCurrentScope := FCurrentScope;
     
@@ -360,13 +361,13 @@ begin
   end;
 end;
 
-function TELSymbolTable.GetUnusedSymbols(): TArray<TELSymbol>;
+function TCPSymbolTable.GetUnusedSymbols(): TArray<TCPSymbol>;
 var
-  LUnusedSymbols: TList<TELSymbol>;
-  LAllSymbols: TArray<TELSymbol>;
-  LSymbol: TELSymbol;
+  LUnusedSymbols: TList<TCPSymbol>;
+  LAllSymbols: TArray<TCPSymbol>;
+  LSymbol: TCPSymbol;
 begin
-  LUnusedSymbols := TList<TELSymbol>.Create();
+  LUnusedSymbols := TList<TCPSymbol>.Create();
   try
     LAllSymbols := GetAllSymbols();
     for LSymbol in LAllSymbols do
@@ -381,7 +382,7 @@ begin
   end;
 end;
 
-procedure TELSymbolTable.Clear();
+procedure TCPSymbolTable.Clear();
 begin
   // Exit all scopes except global
   while FScopeStack.Count > 0 do
@@ -389,7 +390,7 @@ begin
     
   // Clear global scope
   FGlobalScope.Free();
-  FGlobalScope := TELScope.Create(nil, 'global');
+  FGlobalScope := TCPScope.Create(nil, 'global');
   FCurrentScope := FGlobalScope;
 end;
 

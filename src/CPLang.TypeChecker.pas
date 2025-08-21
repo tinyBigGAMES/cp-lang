@@ -1,98 +1,120 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.TypeChecker;
+unit CPLang.TypeChecker;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Parser,
-  ELang.Types,
-  ELang.Symbols,
-  ELang.Errors,
-  ELang.SourceMap;
+  CPLang.Common,
+  CPLang.Parser,
+  CPLang.Types,
+  CPLang.Symbols,
+  CPLang.Errors,
+  CPLang.SourceMap;
 
 type
-  { TELTypeChecker }
-  TELTypeChecker = class(TELObject)
+  { TCPTypeChecker }
+  TCPTypeChecker = class
   private
-    FTypeManager: TELTypeManager;
-    FSymbolTable: TELSymbolTable;
-    FErrorCollector: TELErrorCollector;
+    FTypeManager: TCPTypeManager;
+    FSymbolTable: TCPSymbolTable;
+    FErrorCollector: TCPErrorCollector;
+    FMainFileName: string;
+    FSourceMapper: TCPSourceMapper;
     
-    function GetNodePosition(const ANode: TELASTNode): TELSourcePosition;
-    function GetBinaryOperatorResultType(const AOperator: string; const ALeftType, ARightType: TELType): TELType;
-    function GetUnaryOperatorResultType(const AOperator: string; const AOperandType: TELType): TELType;
-    function IsNumericType(const AType: TELType): Boolean;
-    function IsIntegerType(const AType: TELType): Boolean;
-    function IsBooleanType(const AType: TELType): Boolean;
-    function IsPointerType(const AType: TELType): Boolean;
-    function CanImplicitlyConvert(const AFromType, AToType: TELType): Boolean;
+    function GetNodePosition(const ANode: TCPASTNode): TCPSourcePosition;
+    function GetBinaryOperatorResultType(const AOperator: string; const ALeftType, ARightType: TCPType): TCPType;
+    function GetUnaryOperatorResultType(const AOperator: string; const AOperandType: TCPType): TCPType;
+    function IsNumericType(const AType: TCPType): Boolean;
+    function IsIntegerType(const AType: TCPType): Boolean;
+    function IsBooleanType(const AType: TCPType): Boolean;
+    function IsPointerType(const AType: TCPType): Boolean;
+    function CanImplicitlyConvert(const AFromType, AToType: TCPType): Boolean;
     
   public
-    constructor Create(const ATypeManager: TELTypeManager; 
-      const ASymbolTable: TELSymbolTable; const AErrorCollector: TELErrorCollector); reintroduce;
+    constructor Create(const ATypeManager: TCPTypeManager;
+      const ASymbolTable: TCPSymbolTable; const AErrorCollector: TCPErrorCollector;
+      const AMainFileName: string = '<source>'; const ASourceMapper: TCPSourceMapper = nil);
     destructor Destroy(); override;
     
-    function InferExpressionType(const ANode: TELASTNode): TELType;
-    function CheckAssignmentCompatibility(const ALValueType, ARValueType: TELType; 
-      const ANode: TELASTNode): Boolean;
-    function CheckFunctionCall(const AFunctionSymbol: TELSymbol; 
-      const AArgumentTypes: TArray<TELType>; const ANode: TELASTNode): TELType;
-    function ValidateArrayAccess(const AArrayType: TELType; const AIndexType: TELType; 
-      const ANode: TELASTNode): TELType;
-    function ValidateMemberAccess(const ARecordType: TELType; const AMemberName: string; 
-      const ANode: TELASTNode): TELType;
-    function ValidatePointerDereference(const APointerType: TELType; 
-      const ANode: TELASTNode): TELType;
+    function InferExpressionType(const ANode: TCPASTNode): TCPType;
+    function CheckAssignmentCompatibility(const ALValueType, ARValueType: TCPType;
+      const ANode: TCPASTNode): Boolean;
+    function CheckFunctionCall(const AFunctionSymbol: TCPSymbol;
+      const AArgumentTypes: TArray<TCPType>; const ANode: TCPASTNode): TCPType;
+    function ValidateArrayAccess(const AArrayType: TCPType; const AIndexType: TCPType;
+      const ANode: TCPASTNode): TCPType;
+    function ValidateMemberAccess(const ARecordType: TCPType; const AMemberName: string;
+      const ANode: TCPASTNode): TCPType;
+    function ValidatePointerDereference(const APointerType: TCPType;
+      const ANode: TCPASTNode): TCPType;
+    procedure SetMainFileName(const AFileName: string);
   end;
 
 implementation
 
-{ TELTypeChecker }
-
-constructor TELTypeChecker.Create(const ATypeManager: TELTypeManager; 
-  const ASymbolTable: TELSymbolTable; const AErrorCollector: TELErrorCollector);
+{ TCPTypeChecker }
+constructor TCPTypeChecker.Create(const ATypeManager: TCPTypeManager;
+  const ASymbolTable: TCPSymbolTable; const AErrorCollector: TCPErrorCollector;
+  const AMainFileName: string; const ASourceMapper: TCPSourceMapper);
 begin
   inherited Create();
+
   FTypeManager := ATypeManager;
   FSymbolTable := ASymbolTable;
   FErrorCollector := AErrorCollector;
+  FMainFileName := AMainFileName;
+  FSourceMapper := ASourceMapper;
 end;
 
-destructor TELTypeChecker.Destroy();
+destructor TCPTypeChecker.Destroy();
 begin
   inherited;
 end;
 
-function TELTypeChecker.GetNodePosition(const ANode: TELASTNode): TELSourcePosition;
+function TCPTypeChecker.GetNodePosition(const ANode: TCPASTNode): TCPSourcePosition;
 begin
-  if Assigned(ANode) then
-    Result := TELSourcePosition.Create('<unknown>', 0, 0, ANode.Position)
+  if Assigned(ANode) and (ANode.Position > 0) and Assigned(FSourceMapper) then
+  begin
+    // Map character position through source mapper for includes
+    Result := FSourceMapper.MapPosition(ANode.Position);
+  end
+  else if Assigned(ANode) and (ANode.Position > 0) then
+  begin
+    // Fallback: use main filename with calculated position
+    Result := TCPSourcePosition.Create(FMainFileName, 0, 0, ANode.Position);
+  end
   else
-    Result := TELSourcePosition.Create('<unknown>', 0, 0, 0);
+  begin
+    // Last resort: use main filename with no position
+    Result := TCPSourcePosition.Create(FMainFileName, 0, 0, 0);
+  end;
 end;
 
-function TELTypeChecker.IsNumericType(const AType: TELType): Boolean;
+function TCPTypeChecker.IsNumericType(const AType: TCPType): Boolean;
 begin
-  if not (AType is TELBasicTypeInfo) then
+  if not (AType is TCPBasicTypeInfo) then
     Exit(False);
     
-  case TELBasicTypeInfo(AType).BasicType of
+  case TCPBasicTypeInfo(AType).BasicType of
     btInt, btFloat, btDouble, btInt8, btInt16, btInt32, btInt64,
     btUInt8, btUInt16, btUInt32, btUInt64:
       Result := True;
@@ -101,12 +123,12 @@ begin
   end;
 end;
 
-function TELTypeChecker.IsIntegerType(const AType: TELType): Boolean;
+function TCPTypeChecker.IsIntegerType(const AType: TCPType): Boolean;
 begin
-  if not (AType is TELBasicTypeInfo) then
+  if not (AType is TCPBasicTypeInfo) then
     Exit(False);
     
-  case TELBasicTypeInfo(AType).BasicType of
+  case TCPBasicTypeInfo(AType).BasicType of
     btInt, btInt8, btInt16, btInt32, btInt64,
     btUInt8, btUInt16, btUInt32, btUInt64:
       Result := True;
@@ -115,18 +137,18 @@ begin
   end;
 end;
 
-function TELTypeChecker.IsBooleanType(const AType: TELType): Boolean;
+function TCPTypeChecker.IsBooleanType(const AType: TCPType): Boolean;
 begin
-  Result := (AType is TELBasicTypeInfo) and 
-            (TELBasicTypeInfo(AType).BasicType = btBool);
+  Result := (AType is TCPBasicTypeInfo) and
+            (TCPBasicTypeInfo(AType).BasicType = btBool);
 end;
 
-function TELTypeChecker.IsPointerType(const AType: TELType): Boolean;
+function TCPTypeChecker.IsPointerType(const AType: TCPType): Boolean;
 begin
-  Result := AType is TELPointerType;
+  Result := AType is TCPPointerType;
 end;
 
-function TELTypeChecker.CanImplicitlyConvert(const AFromType, AToType: TELType): Boolean;
+function TCPTypeChecker.CanImplicitlyConvert(const AFromType, AToType: TCPType): Boolean;
 begin
   // Same type
   if AFromType = AToType then
@@ -140,16 +162,16 @@ begin
   if IsNumericType(AFromType) and IsNumericType(AToType) then
   begin
     // Allow implicit widening conversions
-    if (AFromType is TELBasicTypeInfo) and (AToType is TELBasicTypeInfo) then
+    if (AFromType is TCPBasicTypeInfo) and (AToType is TCPBasicTypeInfo) then
     begin
-      case TELBasicTypeInfo(AFromType).BasicType of
-        btInt8: Result := TELBasicTypeInfo(AToType).BasicType in [btInt16, btInt32, btInt64];
-        btInt16: Result := TELBasicTypeInfo(AToType).BasicType in [btInt32, btInt64];
-        btInt32: Result := TELBasicTypeInfo(AToType).BasicType = btInt64;
-        btUInt8: Result := TELBasicTypeInfo(AToType).BasicType in [btUInt16, btUInt32, btUInt64];
-        btUInt16: Result := TELBasicTypeInfo(AToType).BasicType in [btUInt32, btUInt64];
-        btUInt32: Result := TELBasicTypeInfo(AToType).BasicType = btUInt64;
-        btFloat: Result := TELBasicTypeInfo(AToType).BasicType = btDouble;
+      case TCPBasicTypeInfo(AFromType).BasicType of
+        btInt8: Result := TCPBasicTypeInfo(AToType).BasicType in [btInt16, btInt32, btInt64];
+        btInt16: Result := TCPBasicTypeInfo(AToType).BasicType in [btInt32, btInt64];
+        btInt32: Result := TCPBasicTypeInfo(AToType).BasicType = btInt64;
+        btUInt8: Result := TCPBasicTypeInfo(AToType).BasicType in [btUInt16, btUInt32, btUInt64];
+        btUInt16: Result := TCPBasicTypeInfo(AToType).BasicType in [btUInt32, btUInt64];
+        btUInt32: Result := TCPBasicTypeInfo(AToType).BasicType = btUInt64;
+        btFloat: Result := TCPBasicTypeInfo(AToType).BasicType = btDouble;
       else
         Result := False;
       end;
@@ -161,7 +183,7 @@ begin
     Result := False;
 end;
 
-function TELTypeChecker.GetBinaryOperatorResultType(const AOperator: string; const ALeftType, ARightType: TELType): TELType;
+function TCPTypeChecker.GetBinaryOperatorResultType(const AOperator: string; const ALeftType, ARightType: TCPType): TCPType;
 begin
   Result := nil;
   
@@ -212,7 +234,7 @@ begin
   end;
 end;
 
-function TELTypeChecker.GetUnaryOperatorResultType(const AOperator: string; const AOperandType: TELType): TELType;
+function TCPTypeChecker.GetUnaryOperatorResultType(const AOperator: string; const AOperandType: TCPType): TCPType;
 begin
   Result := nil;
   
@@ -235,25 +257,24 @@ begin
   begin
     // Pointer dereference
     if IsPointerType(AOperandType) then
-      Result := TELPointerType(AOperandType).TargetType;
+      Result := TCPPointerType(AOperandType).TargetType;
   end;
 end;
 
-function TELTypeChecker.InferExpressionType(const ANode: TELASTNode): TELType;
+function TCPTypeChecker.InferExpressionType(const ANode: TCPASTNode): TCPType;
 var
-  LSymbol: TELSymbol;
-  LLeftType: TELType;
-  LRightType: TELType;
-  LOperandType: TELType;
-  LArrayType: TELType;
-  LIndexType: TELType;
-  LRecordType: TELType;
+  LSymbol: TCPSymbol;
+  LLeftType: TCPType;
+  LRightType: TCPType;
+  LOperandType: TCPType;
+  LArrayType: TCPType;
+  LIndexType: TCPType;
+  LRecordType: TCPType;
   LMemberName: string;
-  LPointerType: TELType;
-  LFunctionType: TELFunctionType;
-  LArgumentTypes: TArray<TELType>;
+  LArgumentTypes: TArray<TCPType>;
   LArgIndex: Integer;
-  LArgNode: TELASTNode;
+  LArgNode: TCPASTNode;
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
@@ -288,10 +309,11 @@ begin
         end
         else
         begin
+          LPos := GetNodePosition(ANode);
           FErrorCollector.AddSemanticError(
             Format('Undeclared identifier: %s', [ANode.Value]),
             ANode.Value,
-            '<unknown>', 0, 0
+            LPos.FileName, LPos.Line, LPos.Column
           );
         end;
       end;
@@ -308,11 +330,12 @@ begin
             Result := GetBinaryOperatorResultType(ANode.Value, LLeftType, LRightType);
             if not Assigned(Result) then
             begin
+              LPos := GetNodePosition(ANode);
               FErrorCollector.AddTypeError(
                 Format('Invalid operands for operator "%s"', [ANode.Value]),
                 Format('%s %s %s', [LLeftType.GetTypeName(), ANode.Value, LRightType.GetTypeName()]),
                 'compatible types',
-                '<unknown>', 0, 0
+                LPos.FileName, LPos.Line, LPos.Column
               );
             end;
           end;
@@ -329,11 +352,12 @@ begin
             Result := GetUnaryOperatorResultType(ANode.Value, LOperandType);
             if not Assigned(Result) then
             begin
+              LPos := GetNodePosition(ANode);
               FErrorCollector.AddTypeError(
                 Format('Invalid operand for unary operator "%s"', [ANode.Value]),
                 LOperandType.GetTypeName(),
                 'compatible type',
-                '<unknown>', 0, 0
+                LPos.FileName, LPos.Line, LPos.Column
               );
             end;
           end;
@@ -390,10 +414,11 @@ begin
           end
           else
           begin
+            LPos := GetNodePosition(ANode);
             FErrorCollector.AddSemanticError(
               Format('"%s" is not a function', [ANode.GetChild(0).Value]),
               ANode.GetChild(0).Value,
-              '<unknown>', 0, 0
+              LPos.FileName, LPos.Line, LPos.Column
             );
           end;
         end;
@@ -401,8 +426,10 @@ begin
   end;
 end;
 
-function TELTypeChecker.CheckAssignmentCompatibility(const ALValueType, ARValueType: TELType; 
-  const ANode: TELASTNode): Boolean;
+function TCPTypeChecker.CheckAssignmentCompatibility(const ALValueType, ARValueType: TCPType;
+  const ANode: TCPASTNode): Boolean;
+var
+  LPos: TCPSourcePosition;
 begin
   Result := False;
   
@@ -413,28 +440,30 @@ begin
     Result := True
   else
   begin
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddTypeError(
       'Type mismatch in assignment',
       ALValueType.GetTypeName(),
       ARValueType.GetTypeName(),
-      '<unknown>', 0, 0
+      LPos.FileName, LPos.Line, LPos.Column
     );
   end;
 end;
 
-function TELTypeChecker.CheckFunctionCall(const AFunctionSymbol: TELSymbol; 
-  const AArgumentTypes: TArray<TELType>; const ANode: TELASTNode): TELType;
+function TCPTypeChecker.CheckFunctionCall(const AFunctionSymbol: TCPSymbol;
+  const AArgumentTypes: TArray<TCPType>; const ANode: TCPASTNode): TCPType;
 var
-  LFunctionType: TELFunctionType;
-  LParameterTypes: TArray<TELType>;
+  LFunctionType: TCPFunctionType;
+  LParameterTypes: TArray<TCPType>;
   LIndex: Integer;
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
-  if not Assigned(AFunctionSymbol) or not (AFunctionSymbol.SymbolType is TELFunctionType) then
+  if not Assigned(AFunctionSymbol) or not (AFunctionSymbol.SymbolType is TCPFunctionType) then
     Exit;
     
-  LFunctionType := TELFunctionType(AFunctionSymbol.SymbolType);
+  LFunctionType := TCPFunctionType(AFunctionSymbol.SymbolType);
   LParameterTypes := LFunctionType.ParameterTypes;
   
   // Check parameter count
@@ -443,11 +472,12 @@ begin
     // For variadic functions, check minimum required parameters
     if Length(AArgumentTypes) < Length(LParameterTypes) then
     begin
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddSemanticError(
         Format('Function "%s" expects at least %d parameters, got %d', 
           [AFunctionSymbol.SymbolName, Length(LParameterTypes), Length(AArgumentTypes)]),
         AFunctionSymbol.SymbolName,
-        '<unknown>', 0, 0
+        LPos.FileName, LPos.Line, LPos.Column
       );
       Exit;
     end;
@@ -457,11 +487,12 @@ begin
     // For non-variadic functions, check exact parameter count
     if Length(AArgumentTypes) <> Length(LParameterTypes) then
     begin
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddSemanticError(
         Format('Function "%s" expects %d parameters, got %d', 
           [AFunctionSymbol.SymbolName, Length(LParameterTypes), Length(AArgumentTypes)]),
         AFunctionSymbol.SymbolName,
-        '<unknown>', 0, 0
+        LPos.FileName, LPos.Line, LPos.Column
       );
       Exit;
     end;
@@ -474,11 +505,12 @@ begin
     begin
       if not CanImplicitlyConvert(AArgumentTypes[LIndex], LParameterTypes[LIndex]) then
       begin
+        LPos := GetNodePosition(ANode);
         FErrorCollector.AddTypeError(
           Format('Parameter %d type mismatch in call to "%s"', [LIndex + 1, AFunctionSymbol.SymbolName]),
           LParameterTypes[LIndex].GetTypeName(),
           AArgumentTypes[LIndex].GetTypeName(),
-          '<unknown>', 0, 0
+          LPos.FileName, LPos.Line, LPos.Column
         );
       end;
     end;
@@ -487,67 +519,73 @@ begin
   Result := LFunctionType.ReturnType;
 end;
 
-function TELTypeChecker.ValidateArrayAccess(const AArrayType: TELType; const AIndexType: TELType; 
-  const ANode: TELASTNode): TELType;
+function TCPTypeChecker.ValidateArrayAccess(const AArrayType: TCPType; const AIndexType: TCPType;
+  const ANode: TCPASTNode): TCPType;
+var
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
   if not Assigned(AArrayType) or not Assigned(AIndexType) then
     Exit;
     
-  if AArrayType is TELArrayType then
+  if AArrayType is TCPArrayType then
   begin
     if not IsIntegerType(AIndexType) then
     begin
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddTypeError(
         'Array index must be an integer type',
         'integer type',
         AIndexType.GetTypeName(),
-        '<unknown>', 0, 0
+        LPos.FileName, LPos.Line, LPos.Column
       );
     end
     else
-      Result := TELArrayType(AArrayType).ElementType;
+      Result := TCPArrayType(AArrayType).ElementType;
   end
-  else if AArrayType is TELPointerType then
+  else if AArrayType is TCPPointerType then
   begin
     if not IsIntegerType(AIndexType) then
     begin
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddTypeError(
         'Pointer index must be an integer type',
         'integer type',
         AIndexType.GetTypeName(),
-        '<unknown>', 0, 0
+        LPos.FileName, LPos.Line, LPos.Column
       );
     end
     else
-      Result := TELPointerType(AArrayType).TargetType;
+      Result := TCPPointerType(AArrayType).TargetType;
   end
   else
   begin
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddTypeError(
       'Cannot index non-array type',
       'array or pointer type',
       AArrayType.GetTypeName(),
-      '<unknown>', 0, 0
+      LPos.FileName, LPos.Line, LPos.Column
     );
   end;
 end;
 
-function TELTypeChecker.ValidateMemberAccess(const ARecordType: TELType; const AMemberName: string; 
-  const ANode: TELASTNode): TELType;
+function TCPTypeChecker.ValidateMemberAccess(const ARecordType: TCPType; const AMemberName: string;
+  const ANode: TCPASTNode): TCPType;
 var
-  LRecordType: TELRecordType;
-  LField: TELRecordField;
+  LRecordType: TCPRecordType;
+  LField: TCPRecordField;
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
   if not Assigned(ARecordType) then
     Exit;
     
-  if ARecordType is TELRecordType then
+  if ARecordType is TCPRecordType then
   begin
-    LRecordType := TELRecordType(ARecordType);
+    LRecordType := TCPRecordType(ARecordType);
     if LRecordType.HasField(AMemberName) then
     begin
       LField := LRecordType.GetField(AMemberName);
@@ -555,43 +593,53 @@ begin
     end
     else
     begin
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddSemanticError(
         Format('Record has no member named "%s"', [AMemberName]),
         AMemberName,
-        '<unknown>', 0, 0
+        LPos.FileName, LPos.Line, LPos.Column
       );
     end;
   end
   else
   begin
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddTypeError(
       'Cannot access member of non-record type',
       'record type',
       ARecordType.GetTypeName(),
-      '<unknown>', 0, 0
+      LPos.FileName, LPos.Line, LPos.Column
     );
   end;
 end;
 
-function TELTypeChecker.ValidatePointerDereference(const APointerType: TELType; 
-  const ANode: TELASTNode): TELType;
+function TCPTypeChecker.ValidatePointerDereference(const APointerType: TCPType;
+  const ANode: TCPASTNode): TCPType;
+var
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
   if not Assigned(APointerType) then
     Exit;
     
-  if APointerType is TELPointerType then
-    Result := TELPointerType(APointerType).TargetType
+  if APointerType is TCPPointerType then
+    Result := TCPPointerType(APointerType).TargetType
   else
   begin
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddTypeError(
       'Cannot dereference non-pointer type',
       'pointer type',
       APointerType.GetTypeName(),
-      '<unknown>', 0, 0
+      LPos.FileName, LPos.Line, LPos.Column
     );
   end;
+end;
+
+procedure TCPTypeChecker.SetMainFileName(const AFileName: string);
+begin
+  FMainFileName := AFileName;
 end;
 
 end.

@@ -1,122 +1,139 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Semantic;
+unit CPLang.Semantic;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Parser,
-  ELang.Types,
-  ELang.Symbols,
-  ELang.TypeChecker,
-  ELang.Errors,
-  ELang.SourceMap;
+  CPLang.Common,
+  CPLang.Parser,
+  CPLang.Types,
+  CPLang.Symbols,
+  CPLang.TypeChecker,
+  CPLang.Errors,
+  CPLang.SourceMap;
 
 type
-  { TELParameterInfo }
-  TELParameterInfo = record
+  { TCPParameterInfo }
+  TCPParameterInfo = record
     ParameterName: string;
-    ParameterType: TELType;
+    ParameterType: TCPType;
     Modifier: string; // 'ref', 'const', or empty
-    DeclaredNode: TELASTNode;
+    DeclaredNode: TCPASTNode;
   end;
 
-  { TELSemanticAnalyzer }
-  TELSemanticAnalyzer = class(TELObject)
+  { TCPSemanticAnalyzer }
+  TCPSemanticAnalyzer = class
   private
-    FSymbolTable: TELSymbolTable;
-    FTypeManager: TELTypeManager;
-    FTypeChecker: TELTypeChecker;
-    FErrorCollector: TELErrorCollector;
-    FSourceMapper: TELSourceMapper;
+    FSymbolTable: TCPSymbolTable;
+    FTypeManager: TCPTypeManager;
+    FTypeChecker: TCPTypeChecker;
+    FErrorCollector: TCPErrorCollector;
+    FSourceMapper: TCPSourceMapper;
+    FMainFileName: string;
     FHasMainFunction: Boolean;
-    FCurrentFunction: TELSymbol;
+    FCurrentFunction: TCPSymbol;
     FInLoop: Boolean;
     
-    procedure AnalyzeNode(const ANode: TELASTNode);
-    procedure AnalyzeProgram(const ANode: TELASTNode);
-    procedure AnalyzeVariableDecl(const ANode: TELASTNode);
-    procedure AnalyzeFunctionDecl(const ANode: TELASTNode);
-    procedure AnalyzeMainFunction(const ANode: TELASTNode);
-    procedure AnalyzeTypeDecl(const ANode: TELASTNode);
-    procedure AnalyzeStatementBlock(const ANode: TELASTNode);
-    procedure AnalyzeStatement(const ANode: TELASTNode);
-    procedure AnalyzeAssignment(const ANode: TELASTNode);
-    procedure AnalyzeIfStatement(const ANode: TELASTNode);
-    procedure AnalyzeWhileStatement(const ANode: TELASTNode);
-    procedure AnalyzeForStatement(const ANode: TELASTNode);
-    procedure AnalyzeRepeatStatement(const ANode: TELASTNode);
-    procedure AnalyzeCaseStatement(const ANode: TELASTNode);
-    procedure AnalyzeReturnStatement(const ANode: TELASTNode);
-    procedure AnalyzeCallStatement(const ANode: TELASTNode);
-    procedure AnalyzeBreakStatement(const ANode: TELASTNode);
-    procedure AnalyzeContinueStatement(const ANode: TELASTNode);
-    procedure AnalyzeGotoStatement(const ANode: TELASTNode);
-    procedure AnalyzeExpression(const ANode: TELASTNode);
-    procedure AnalyzeFunctionCall(const ANode: TELASTNode);
+    procedure AnalyzeNode(const ANode: TCPASTNode);
+    procedure AnalyzeProgram(const ANode: TCPASTNode);
+    procedure AnalyzeVariableDecl(const ANode: TCPASTNode);
+    procedure AnalyzeFunctionDecl(const ANode: TCPASTNode);
+    procedure AnalyzeMainFunction(const ANode: TCPASTNode);
+    procedure AnalyzeTypeDecl(const ANode: TCPASTNode);
+    procedure AnalyzeStatementBlock(const ANode: TCPASTNode);
+    {$HINTS OFF}
+    procedure AnalyzeStatement(const ANode: TCPASTNode);
+    {$HINTS ON}
+    procedure AnalyzeAssignment(const ANode: TCPASTNode);
+    procedure AnalyzeIfStatement(const ANode: TCPASTNode);
+    procedure AnalyzeWhileStatement(const ANode: TCPASTNode);
+    procedure AnalyzeForStatement(const ANode: TCPASTNode);
+    procedure AnalyzeRepeatStatement(const ANode: TCPASTNode);
+    procedure AnalyzeCaseStatement(const ANode: TCPASTNode);
+    procedure AnalyzeReturnStatement(const ANode: TCPASTNode);
+    procedure AnalyzeCallStatement(const ANode: TCPASTNode);
+    procedure AnalyzeBreakStatement(const ANode: TCPASTNode);
+    procedure AnalyzeContinueStatement(const ANode: TCPASTNode);
+    procedure AnalyzeGotoStatement(const ANode: TCPASTNode);
+    procedure AnalyzeExpression(const ANode: TCPASTNode);
+    procedure AnalyzeFunctionCall(const ANode: TCPASTNode);
     
-    function ProcessFunctionHeader(const ANode: TELASTNode): TELSymbol;
-    function ProcessParameterList(const ANode: TELASTNode): TArray<TELType>;
-    function ExtractParameterInfo(const ANode: TELASTNode): TArray<TELParameterInfo>;
-    function HasVariadicParameters(const ANode: TELASTNode): Boolean;
-    function ResolveTypeFromNode(const ANode: TELASTNode): TELType;
-    function GetNodePosition(const ANode: TELASTNode): TELSourcePosition;
-    function GetLineColumnFromPosition(const ACharIndex: Integer): TELLineColumn;
-    function ValidateMainFunction(const ANode: TELASTNode): Boolean;
+    function ProcessFunctionHeader(const ANode: TCPASTNode): TCPSymbol;
+    function ProcessParameterList(const ANode: TCPASTNode): TArray<TCPType>;
+    function ExtractParameterInfo(const ANode: TCPASTNode): TArray<TCPParameterInfo>;
+    function HasVariadicParameters(const ANode: TCPASTNode): Boolean;
+    function ResolveTypeFromNode(const ANode: TCPASTNode): TCPType;
+    function GetNodePosition(const ANode: TCPASTNode): TCPSourcePosition;
+    function GetLineColumnFromPosition(const ACharIndex: Integer): TCPLineColumn;
+    function ValidateMainFunction(const ANode: TCPASTNode): Boolean;
     
   public
-    constructor Create(const ATypeManager: TELTypeManager; 
-      const AErrorCollector: TELErrorCollector; const ASourceMapper: TELSourceMapper = nil); reintroduce;
+    constructor Create(const ATypeManager: TCPTypeManager;
+      const AErrorCollector: TCPErrorCollector; const ASourceMapper: TCPSourceMapper = nil; const AMainFileName: string = '<source>');
     destructor Destroy(); override;
     
-    function Analyze(const AAST: TELASTNode): Boolean;
-    function GetUnusedSymbolWarnings(): TArray<TELCompilerError>;
+    function Analyze(const AAST: TCPASTNode): Boolean;
+    procedure SetMainFileName(const AFileName: string);
+    function GetUnusedSymbolWarnings(): TArray<TCPCompilerError>;
     
-    property SymbolTable: TELSymbolTable read FSymbolTable;
+    property SymbolTable: TCPSymbolTable read FSymbolTable;
     property HasMainFunction: Boolean read FHasMainFunction;
   end;
 
 implementation
 
-{ TELSemanticAnalyzer }
-
-constructor TELSemanticAnalyzer.Create(const ATypeManager: TELTypeManager; 
-  const AErrorCollector: TELErrorCollector; const ASourceMapper: TELSourceMapper);
+{ TCPSemanticAnalyzer }
+constructor TCPSemanticAnalyzer.Create(const ATypeManager: TCPTypeManager;
+  const AErrorCollector: TCPErrorCollector; const ASourceMapper: TCPSourceMapper; const AMainFileName: string);
 begin
   inherited Create();
   FTypeManager := ATypeManager;
   FErrorCollector := AErrorCollector;
   FSourceMapper := ASourceMapper;
-  FSymbolTable := TELSymbolTable.Create();
-  FTypeChecker := TELTypeChecker.Create(FTypeManager, FSymbolTable, FErrorCollector);
+  FMainFileName := AMainFileName;
+  FSymbolTable := TCPSymbolTable.Create();
+  FTypeChecker := TCPTypeChecker.Create(FTypeManager, FSymbolTable, FErrorCollector, FMainFileName, FSourceMapper);
   FHasMainFunction := False;
   FCurrentFunction := nil;
   FInLoop := False;
 end;
 
-destructor TELSemanticAnalyzer.Destroy();
+destructor TCPSemanticAnalyzer.Destroy();
 begin
   FTypeChecker.Free();
   FSymbolTable.Free();
   inherited;
 end;
 
-function TELSemanticAnalyzer.GetNodePosition(const ANode: TELASTNode): TELSourcePosition;
+procedure TCPSemanticAnalyzer.SetMainFileName(const AFileName: string);
+begin
+  FMainFileName := AFileName;
+  if Assigned(FTypeChecker) then
+    FTypeChecker.SetMainFileName(AFileName);
+end;
+
+function TCPSemanticAnalyzer.GetNodePosition(const ANode: TCPASTNode): TCPSourcePosition;
+var
+  LLineColumn: TCPLineColumn;
 begin
   if Assigned(ANode) and (ANode.Position > 0) and Assigned(FSourceMapper) then
   begin
@@ -126,17 +143,17 @@ begin
   else if Assigned(ANode) and (ANode.Position > 0) then
   begin
     // Fallback: calculate position from character index without source mapping
-    var LLineColumn := GetLineColumnFromPosition(ANode.Position);
-    Result := TELSourcePosition.Create('<source>', LLineColumn.Line, LLineColumn.Column, ANode.Position);
+    LLineColumn := GetLineColumnFromPosition(ANode.Position);
+    Result := TCPSourcePosition.Create(FMainFileName, LLineColumn.Line, LLineColumn.Column, ANode.Position);
   end
   else
   begin
-    // Last resort: unknown position
-    Result := TELSourcePosition.Create('<unknown>', 0, 0, 0);
+    // Last resort: use main filename with no position
+    Result := TCPSourcePosition.Create(FMainFileName, 0, 0, 0);
   end;
 end;
 
-function TELSemanticAnalyzer.GetLineColumnFromPosition(const ACharIndex: Integer): TELLineColumn;
+function TCPSemanticAnalyzer.GetLineColumnFromPosition(const ACharIndex: Integer): TCPLineColumn;
 begin
   // Fallback position calculation when source mapper not available
   if Assigned(FSourceMapper) then
@@ -148,7 +165,9 @@ begin
   end;
 end;
 
-function TELSemanticAnalyzer.Analyze(const AAST: TELASTNode): Boolean;
+function TCPSemanticAnalyzer.Analyze(const AAST: TCPASTNode): Boolean;
+var
+  LPos: TCPSourcePosition;
 begin
   Result := False;
   FHasMainFunction := False;
@@ -156,7 +175,7 @@ begin
   try
     if not Assigned(AAST) then
     begin
-      FErrorCollector.AddSemanticError('No AST provided for semantic analysis', '', '<source>', 0, 0);
+      FErrorCollector.AddSemanticError('No AST provided for semantic analysis', '', FMainFileName, 0, 0);
       Exit;
     end;
     
@@ -165,7 +184,7 @@ begin
     // Check for mandatory main function
     if not FHasMainFunction then
     begin
-      var LPos := GetNodePosition(AAST);
+      LPos := GetNodePosition(AAST);
       FErrorCollector.AddSemanticError('Program must have a main function', '', LPos.FileName, LPos.Line, LPos.Column);
     end;
     
@@ -174,13 +193,15 @@ begin
   except
     on E: Exception do
     begin
-      var LPos := GetNodePosition(AAST);
+      LPos := GetNodePosition(AAST);
       FErrorCollector.AddSemanticError('Internal semantic analysis error: ' + E.Message, '', LPos.FileName, LPos.Line, LPos.Column);
     end;
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeNode(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeNode(const ANode: TCPASTNode);
+var
+  LIndex: Integer;
 begin
   if not Assigned(ANode) then
     Exit;
@@ -208,12 +229,12 @@ begin
     astArrayAccess, astMemberAccess: AnalyzeExpression(ANode);
   else
     // For other node types, recursively analyze children
-    for var LIndex := 0 to ANode.ChildCount() - 1 do
+    for LIndex := 0 to ANode.ChildCount() - 1 do
       AnalyzeNode(ANode.GetChild(LIndex));
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeProgram(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeProgram(const ANode: TCPASTNode);
 var
   LIndex: Integer;
 begin
@@ -222,33 +243,50 @@ begin
     AnalyzeNode(ANode.GetChild(LIndex));
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeVariableDecl(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeVariableDecl(const ANode: TCPASTNode);
 var
-  LTypeNode: TELASTNode;
-  LVariableType: TELType;
-  LIdentifierNode: TELASTNode;
+  LTypeNode: TCPASTNode;
+  LVariableType: TCPType;
+  LIdentifierNode: TCPASTNode;
   LVariableName: string;
-  LSymbol: TELSymbol;
+  LSymbol: TCPSymbol;
   LIndex: Integer;
-  LInitExpression: TELASTNode;
-  LInitType: TELType;
+  LInitExpression: TCPASTNode;
+  LInitType: TCPType;
+  LPos: TCPSourcePosition;
+  LIdentifierCount: Integer;
+  LHasInitialization: Boolean;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
+  
+  // Count identifiers (all astIdentifier children)
+  LIdentifierCount := 0;
+  for LIndex := 0 to ANode.ChildCount() - 1 do
+  begin
+    if ANode.GetChild(LIndex).NodeType = astIdentifier then
+      Inc(LIdentifierCount);
+  end;
+  
+  // Type is always at index LIdentifierCount
+  // Initialization (if present) is at index LIdentifierCount + 1
+  LHasInitialization := ANode.ChildCount() > LIdentifierCount + 1;
+  
+  if LIdentifierCount >= ANode.ChildCount() then
+    Exit; // No type node found
     
-  // Last child is the type specification
-  LTypeNode := ANode.GetChild(ANode.ChildCount() - 1);
+  LTypeNode := ANode.GetChild(LIdentifierCount);
   LVariableType := ResolveTypeFromNode(LTypeNode);
   
   if not Assigned(LVariableType) then
   begin
-    var LPos := GetNodePosition(LTypeNode);
+    LPos := GetNodePosition(LTypeNode);
     FErrorCollector.AddSemanticError('Cannot resolve variable type', '', LPos.FileName, LPos.Line, LPos.Column);
     Exit;
   end;
   
-  // All children except the last are identifiers (and potentially initialization)
-  for LIndex := 0 to ANode.ChildCount() - 2 do
+  // Process each identifier
+  for LIndex := 0 to LIdentifierCount - 1 do
   begin
     LIdentifierNode := ANode.GetChild(LIndex);
     if LIdentifierNode.NodeType = astIdentifier then
@@ -258,7 +296,7 @@ begin
       // Check for redeclaration in current scope
       if FSymbolTable.CheckForRedeclaration(LVariableName, LIdentifierNode) then
       begin
-        var LPos := GetNodePosition(LIdentifierNode);
+        LPos := GetNodePosition(LIdentifierNode);
         FErrorCollector.AddSemanticError(
           Format('Variable "%s" is already declared in current scope', [LVariableName]),
           LVariableName, LPos.FileName, LPos.Line, LPos.Column
@@ -271,10 +309,9 @@ begin
         LSymbol := FSymbolTable.DeclareSymbol(LVariableName, skVariable, LVariableType, LIdentifierNode);
         
         // Check for initialization
-        if (ANode.ChildCount() >= 3) and (LIndex = ANode.ChildCount() - 3) then
+        if LHasInitialization then
         begin
-          // There might be an initialization expression
-          LInitExpression := ANode.GetChild(ANode.ChildCount() - 2);
+          LInitExpression := ANode.GetChild(LIdentifierCount + 1);
           if Assigned(LInitExpression) then
           begin
             LInitType := FTypeChecker.InferExpressionType(LInitExpression);
@@ -287,9 +324,9 @@ begin
         end;
         
       except
-      on E: EELException do
+      on E: ECPException do
       begin
-      var LPos := GetNodePosition(LIdentifierNode);
+      LPos := GetNodePosition(LIdentifierNode);
         FErrorCollector.AddSemanticError(E.Message, LVariableName, LPos.FileName, LPos.Line, LPos.Column);
         end;
         end;
@@ -297,11 +334,15 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeFunctionDecl(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeFunctionDecl(const ANode: TCPASTNode);
 var
-  LFunctionSymbol: TELSymbol;
-  LOldFunction: TELSymbol;
+  LFunctionSymbol: TCPSymbol;
+  LOldFunction: TCPSymbol;
   LIsExternal: Boolean;
+  LParameterInfo: TArray<TCPParameterInfo>;
+  LParam: TCPParameterInfo;
+  LParamSymbol: TCPSymbol;
+  LPos: TCPSourcePosition;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
@@ -322,14 +363,14 @@ begin
   
   try
     // Add parameters to function scope
-    if LFunctionSymbol.SymbolType is TELFunctionType then
+    if LFunctionSymbol.SymbolType is TCPFunctionType then
     begin
       // Extract parameter information from the function header and add to scope
-      var LParameterInfo := ExtractParameterInfo(ANode.GetChild(0));
-      for var LParam in LParameterInfo do
+      LParameterInfo := ExtractParameterInfo(ANode.GetChild(0));
+      for LParam in LParameterInfo do
       begin
         try
-          var LParamSymbol := FSymbolTable.DeclareSymbol(
+          LParamSymbol := FSymbolTable.DeclareSymbol(
             LParam.ParameterName, 
             skParameter, 
             LParam.ParameterType, 
@@ -337,9 +378,9 @@ begin
           );
           LParamSymbol.IsInitialized := True; // Parameters are always initialized
         except
-          on E: EELException do
+          on E: ECPException do
           begin
-            var LPos := GetNodePosition(LParam.DeclaredNode);
+            LPos := GetNodePosition(LParam.DeclaredNode);
             FErrorCollector.AddSemanticError(
               Format('Parameter declaration error: %s', [E.Message]),
               LParam.ParameterName, LPos.FileName, LPos.Line, LPos.Column
@@ -359,10 +400,10 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeMainFunction(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeMainFunction(const ANode: TCPASTNode);
 var
-  LMainSymbol: TELSymbol;
-  LOldFunction: TELSymbol;
+  LMainSymbol: TCPSymbol;
+  LOldFunction: TCPSymbol;
 begin
   FHasMainFunction := True;
   
@@ -389,13 +430,15 @@ begin
   end;
 end;
 
-function TELSemanticAnalyzer.ValidateMainFunction(const ANode: TELASTNode): Boolean;
+function TCPSemanticAnalyzer.ValidateMainFunction(const ANode: TCPASTNode): Boolean;
+var
+  LPos: TCPSourcePosition;
 begin
   Result := True;
   
   if ANode.ChildCount() < 2 then
   begin
-    var LPos := GetNodePosition(ANode);
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddSemanticError('Main function is malformed', 'main', LPos.FileName, LPos.Line, LPos.Column);
     Exit(False);
   end;
@@ -404,29 +447,31 @@ begin
   // The signature is validated in ProcessFunctionHeader
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeTypeDecl(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeTypeDecl(const ANode: TCPASTNode);
 var
   LTypeName: string;
-  LTypeSpec: TELType;
-  LSymbol: TELSymbol;
+  LTypeSpec: TCPType;
+  //LSymbol: TCPSymbol;
+  LPos: TCPSourcePosition;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
-    
+
   if ANode.GetChild(0).NodeType = astIdentifier then
   begin
     LTypeName := ANode.GetChild(0).Value;
     LTypeSpec := ResolveTypeFromNode(ANode.GetChild(1));
-    
+
     if Assigned(LTypeSpec) then
     begin
       try
-        LSymbol := FSymbolTable.DeclareSymbol(LTypeName, skType, LTypeSpec, ANode.GetChild(0));
+        //LSymbol := FSymbolTable.DeclareSymbol(LTypeName, skType, LTypeSpec, ANode.GetChild(0));
+        FSymbolTable.DeclareSymbol(LTypeName, skType, LTypeSpec, ANode.GetChild(0));
         FTypeManager.RegisterType(LTypeName, LTypeSpec);
       except
-        on E: EELException do
+        on E: ECPException do
         begin
-          var LPos := GetNodePosition(ANode.GetChild(0));
+          LPos := GetNodePosition(ANode.GetChild(0));
           FErrorCollector.AddSemanticError(E.Message, LTypeName, LPos.FileName, LPos.Line, LPos.Column);
         end;
       end;
@@ -434,7 +479,7 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeStatementBlock(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeStatementBlock(const ANode: TCPASTNode);
 var
   LIndex: Integer;
 begin
@@ -447,15 +492,15 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeStatement(const ANode: TCPASTNode);
 begin
   AnalyzeNode(ANode);
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeAssignment(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeAssignment(const ANode: TCPASTNode);
 var
-  LLValueType: TELType;
-  LRValueType: TELType;
+  LLValueType: TCPType;
+  LRValueType: TCPType;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
@@ -469,9 +514,10 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeIfStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeIfStatement(const ANode: TCPASTNode);
 var
-  LConditionType: TELType;
+  LConditionType: TCPType;
+  LPos: TCPSourcePosition;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
@@ -480,10 +526,10 @@ begin
   LConditionType := FTypeChecker.InferExpressionType(ANode.GetChild(0));
   if Assigned(LConditionType) then
   begin
-    if not (LConditionType is TELBasicTypeInfo) or 
-       (TELBasicTypeInfo(LConditionType).BasicType <> btBool) then
+    if not (LConditionType is TCPBasicTypeInfo) or
+       (TCPBasicTypeInfo(LConditionType).BasicType <> btBool) then
     begin
-      var LPos := GetNodePosition(ANode.GetChild(0));
+      LPos := GetNodePosition(ANode.GetChild(0));
       FErrorCollector.AddTypeError(
         'If condition must be boolean',
         'bool',
@@ -501,10 +547,11 @@ begin
     AnalyzeNode(ANode.GetChild(2));
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeWhileStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeWhileStatement(const ANode: TCPASTNode);
 var
-  LConditionType: TELType;
+  LConditionType: TCPType;
   LOldInLoop: Boolean;
+  LPos: TCPSourcePosition;
 begin
   if ANode.ChildCount() < 2 then
     Exit;
@@ -513,10 +560,10 @@ begin
   LConditionType := FTypeChecker.InferExpressionType(ANode.GetChild(0));
   if Assigned(LConditionType) then
   begin
-    if not (LConditionType is TELBasicTypeInfo) or 
-       (TELBasicTypeInfo(LConditionType).BasicType <> btBool) then
+    if not (LConditionType is TCPBasicTypeInfo) or
+       (TCPBasicTypeInfo(LConditionType).BasicType <> btBool) then
     begin
-      var LPos := GetNodePosition(ANode.GetChild(0));
+      LPos := GetNodePosition(ANode.GetChild(0));
       FErrorCollector.AddTypeError(
         'While condition must be boolean',
         'bool',
@@ -536,25 +583,26 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeForStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeForStatement(const ANode: TCPASTNode);
 var
   LOldInLoop: Boolean;
-  LVariableType: TELType;
-  LStartType: TELType;
-  LEndType: TELType;
+  LVariableType: TCPType;
+  //LStartType: TCPType;
+  //LEndType: TCPType;
+  LPos: TCPSourcePosition;
 begin
   if ANode.ChildCount() < 4 then
     Exit;
-    
+
   // Analyze loop variable (should be integer)
   LVariableType := FTypeChecker.InferExpressionType(ANode.GetChild(0));
-  LStartType := FTypeChecker.InferExpressionType(ANode.GetChild(1));
-  LEndType := FTypeChecker.InferExpressionType(ANode.GetChild(2));
+  //LStartType := FTypeChecker.InferExpressionType(ANode.GetChild(1));
+  //LEndType := FTypeChecker.InferExpressionType(ANode.GetChild(2));
   
   // Validate types
-  if Assigned(LVariableType) and not (LVariableType is TELBasicTypeInfo) then
+  if Assigned(LVariableType) and not (LVariableType is TCPBasicTypeInfo) then
   begin
-    var LPos := GetNodePosition(ANode.GetChild(0));
+    LPos := GetNodePosition(ANode.GetChild(0));
     FErrorCollector.AddTypeError(
       'For loop variable must be integer type',
       'integer',
@@ -573,11 +621,12 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeRepeatStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeRepeatStatement(const ANode: TCPASTNode);
 var
   LOldInLoop: Boolean;
-  LConditionType: TELType;
+  LConditionType: TCPType;
   LIndex: Integer;
+  LPos: TCPSourcePosition;
 begin
   LOldInLoop := FInLoop;
   FInLoop := True;
@@ -592,10 +641,10 @@ begin
       LConditionType := FTypeChecker.InferExpressionType(ANode.GetChild(ANode.ChildCount() - 1));
       if Assigned(LConditionType) then
       begin
-        if not (LConditionType is TELBasicTypeInfo) or 
-           (TELBasicTypeInfo(LConditionType).BasicType <> btBool) then
+        if not (LConditionType is TCPBasicTypeInfo) or
+           (TCPBasicTypeInfo(LConditionType).BasicType <> btBool) then
         begin
-          var LPos := GetNodePosition(ANode.GetChild(ANode.ChildCount() - 1));
+          LPos := GetNodePosition(ANode.GetChild(ANode.ChildCount() - 1));
           FErrorCollector.AddTypeError(
             'Repeat condition must be boolean',
             'bool',
@@ -610,7 +659,9 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeCaseStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeCaseStatement(const ANode: TCPASTNode);
+var
+  LIndex: Integer;
 begin
   // Simplified case analysis
   if ANode.ChildCount() >= 1 then
@@ -619,26 +670,27 @@ begin
     FTypeChecker.InferExpressionType(ANode.GetChild(0));
     
     // Analyze case items (simplified)
-    for var LIndex := 1 to ANode.ChildCount() - 1 do
+    for LIndex := 1 to ANode.ChildCount() - 1 do
       AnalyzeNode(ANode.GetChild(LIndex));
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeReturnStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeReturnStatement(const ANode: TCPASTNode);
 var
-  LReturnType: TELType;
-  LExpectedReturnType: TELType;
+  LReturnType: TCPType;
+  LExpectedReturnType: TCPType;
+  LPos: TCPSourcePosition;
 begin
   if not Assigned(FCurrentFunction) then
   begin
-    var LPos := GetNodePosition(ANode);
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddSemanticError('Return statement outside function', '', LPos.FileName, LPos.Line, LPos.Column);
     Exit;
   end;
   
   LExpectedReturnType := nil;
-  if FCurrentFunction.SymbolType is TELFunctionType then
-    LExpectedReturnType := TELFunctionType(FCurrentFunction.SymbolType).ReturnType;
+  if FCurrentFunction.SymbolType is TCPFunctionType then
+    LExpectedReturnType := TCPFunctionType(FCurrentFunction.SymbolType).ReturnType;
   
   if ANode.ChildCount() > 0 then
   begin
@@ -647,7 +699,7 @@ begin
     
     if not Assigned(LExpectedReturnType) then
     begin
-      var LPos := GetNodePosition(ANode);
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddSemanticError('Procedure cannot return a value', '', LPos.FileName, LPos.Line, LPos.Column);
     end
     else if Assigned(LReturnType) then
@@ -660,38 +712,42 @@ begin
     // Return without value
     if Assigned(LExpectedReturnType) then
     begin
-      var LPos := GetNodePosition(ANode);
+      LPos := GetNodePosition(ANode);
       FErrorCollector.AddSemanticError('Function must return a value', '', LPos.FileName, LPos.Line, LPos.Column);
     end;
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeCallStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeCallStatement(const ANode: TCPASTNode);
 begin
   // Analyze the expression (which should be a function call)
   if ANode.ChildCount() > 0 then
     AnalyzeExpression(ANode.GetChild(0));
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeBreakStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeBreakStatement(const ANode: TCPASTNode);
+var
+  LPos: TCPSourcePosition;
 begin
   if not FInLoop then
   begin
-    var LPos := GetNodePosition(ANode);
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddSemanticError('Break statement outside loop', '', LPos.FileName, LPos.Line, LPos.Column);
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeContinueStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeContinueStatement(const ANode: TCPASTNode);
+var
+  LPos: TCPSourcePosition;
 begin
   if not FInLoop then
   begin
-    var LPos := GetNodePosition(ANode);
+    LPos := GetNodePosition(ANode);
     FErrorCollector.AddSemanticError('Continue statement outside loop', '', LPos.FileName, LPos.Line, LPos.Column);
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeGotoStatement(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeGotoStatement(const ANode: TCPASTNode);
 begin
   // Simplified goto analysis - would need label tracking for full implementation
   if ANode.ChildCount() > 0 then
@@ -700,26 +756,27 @@ begin
   end;
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeExpression(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeExpression(const ANode: TCPASTNode);
 begin
   // Let the type checker handle expression analysis
   FTypeChecker.InferExpressionType(ANode);
 end;
 
-procedure TELSemanticAnalyzer.AnalyzeFunctionCall(const ANode: TELASTNode);
+procedure TCPSemanticAnalyzer.AnalyzeFunctionCall(const ANode: TCPASTNode);
 begin
   // Function calls are handled by the type checker in InferExpressionType
   FTypeChecker.InferExpressionType(ANode);
 end;
 
-function TELSemanticAnalyzer.ProcessFunctionHeader(const ANode: TELASTNode): TELSymbol;
+function TCPSemanticAnalyzer.ProcessFunctionHeader(const ANode: TCPASTNode): TCPSymbol;
 var
   LFunctionName: string;
-  LParameterTypes: TArray<TELType>;
-  LReturnType: TELType;
-  LFunctionType: TELFunctionType;
+  LParameterTypes: TArray<TCPType>;
+  LReturnType: TCPType;
+  LFunctionType: TCPFunctionType;
   LIsFunction: Boolean;
   LIsVariadic: Boolean;
+  LPos: TCPSourcePosition;
 begin
   Result := nil;
   
@@ -759,24 +816,24 @@ begin
   try
     Result := FSymbolTable.DeclareSymbol(LFunctionName, skFunction, LFunctionType, ANode.GetChild(0));
   except
-    on E: EELException do
+    on E: ECPException do
     begin
-      var LPos := GetNodePosition(ANode.GetChild(0));
+      LPos := GetNodePosition(ANode.GetChild(0));
       FErrorCollector.AddSemanticError(E.Message, LFunctionName, LPos.FileName, LPos.Line, LPos.Column);
     end;
   end;
 end;
 
-function TELSemanticAnalyzer.ProcessParameterList(const ANode: TELASTNode): TArray<TELType>;
+function TCPSemanticAnalyzer.ProcessParameterList(const ANode: TCPASTNode): TArray<TCPType>;
 var
-  LParameterTypes: TList<TELType>;
+  LParameterTypes: TList<TCPType>;
   LIndex: Integer;
-  LParamNode: TELASTNode;
-  LParamType: TELType;
+  LParamNode: TCPASTNode;
+  LParamType: TCPType;
   LIdentifierCount: Integer;
   LIdentifierIndex: Integer;
 begin
-  LParameterTypes := TList<TELType>.Create();
+  LParameterTypes := TList<TCPType>.Create();
   try
     for LIndex := 0 to ANode.ChildCount() - 1 do
     begin
@@ -812,20 +869,20 @@ begin
   end;
 end;
 
-function TELSemanticAnalyzer.ExtractParameterInfo(const ANode: TELASTNode): TArray<TELParameterInfo>;
+function TCPSemanticAnalyzer.ExtractParameterInfo(const ANode: TCPASTNode): TArray<TCPParameterInfo>;
 var
-  LParameterList: TList<TELParameterInfo>;
-  LParameterListNode: TELASTNode;
+  LParameterList: TList<TCPParameterInfo>;
+  LParameterListNode: TCPASTNode;
   LIndex: Integer;
-  LParamNode: TELASTNode;
-  LParamType: TELType;
+  LParamNode: TCPASTNode;
+  LParamType: TCPType;
   LModifier: string;
   LIdentifierCount: Integer;
   LIdentifierIndex: Integer;
-  LIdentifierNode: TELASTNode;
-  LParamInfo: TELParameterInfo;
+  LIdentifierNode: TCPASTNode;
+  LParamInfo: TCPParameterInfo;
 begin
-  LParameterList := TList<TELParameterInfo>.Create();
+  LParameterList := TList<TCPParameterInfo>.Create();
   try
     // Get the parameter list node (second child of function header)
     if (ANode.ChildCount() >= 2) then
@@ -873,10 +930,10 @@ begin
   end;
 end;
 
-function TELSemanticAnalyzer.HasVariadicParameters(const ANode: TELASTNode): Boolean;
+function TCPSemanticAnalyzer.HasVariadicParameters(const ANode: TCPASTNode): Boolean;
 var
   LIndex: Integer;
-  LParamNode: TELASTNode;
+  LParamNode: TCPASTNode;
 begin
   Result := False;
   
@@ -893,25 +950,25 @@ begin
   end;
 end;
 
-function TELSemanticAnalyzer.ResolveTypeFromNode(const ANode: TELASTNode): TELType;
+function TCPSemanticAnalyzer.ResolveTypeFromNode(const ANode: TCPASTNode): TCPType;
 begin
   Result := FTypeManager.ResolveType(ANode);
 end;
 
-function TELSemanticAnalyzer.GetUnusedSymbolWarnings(): TArray<TELCompilerError>;
+function TCPSemanticAnalyzer.GetUnusedSymbolWarnings(): TArray<TCPCompilerError>;
 var
-  LUnusedSymbols: TArray<TELSymbol>;
-  LWarnings: TList<TELCompilerError>;
-  LSymbol: TELSymbol;
-  LWarning: TELCompilerError;
+  LUnusedSymbols: TArray<TCPSymbol>;
+  LWarnings: TList<TCPCompilerError>;
+  LSymbol: TCPSymbol;
+  LWarning: TCPCompilerError;
 begin
-  LWarnings := TList<TELCompilerError>.Create();
+  LWarnings := TList<TCPCompilerError>.Create();
   try
     LUnusedSymbols := FSymbolTable.GetUnusedSymbols();
     
     for LSymbol in LUnusedSymbols do
     begin
-      LWarning := TELCompilerError.Create(
+      LWarning := TCPCompilerError.Create(
         Format('Unused variable: %s', [LSymbol.SymbolName]),
         'Semantic',
         LSymbol.FileName,

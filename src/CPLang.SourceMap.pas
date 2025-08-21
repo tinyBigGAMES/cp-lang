@@ -1,46 +1,50 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.SourceMap;
+unit CPLang.SourceMap;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common;
+  CPLang.Common;
 
 type
-  { TELSourcePosition }
-  TELSourcePosition = record
+  { TCPSourcePosition }
+  TCPSourcePosition = record
     FileName: string;
     Line: Integer;
     Column: Integer;
     CharIndex: Integer;
     
-    class function Create(const AFileName: string; const ALine, AColumn, ACharIndex: Integer): TELSourcePosition; static;
+    class function Create(const AFileName: string; const ALine, AColumn, ACharIndex: Integer): TCPSourcePosition; static;
     function ToString(): string;
   end;
 
-  { TELLineColumn }
-  TELLineColumn = record
+  { TCPLineColumn }
+  TCPLineColumn = record
     Line: Integer;
     Column: Integer;
   end;
 
-  { TELSourceMapEntry }
-  TELSourceMapEntry = record
+  { TCPSourceMapEntry }
+  TCPSourceMapEntry = record
     OriginalFile: string;
     OriginalLine: Integer;
     OriginalColumn: Integer;
@@ -50,25 +54,25 @@ type
     MergedEndLine: Integer;
   end;
 
-  { TELSourceMapper }
-  TELSourceMapper = class(TELObject)
+  { TCPSourceMapper }
+  TCPSourceMapper = class
   private
-    FMappings: TList<TELSourceMapEntry>;
+    FMappings: TList<TCPSourceMapEntry>;
     FMergedSource: string;
     FLineStarts: TList<Integer>; // Character positions where each line starts
     
     procedure BuildLineIndex();
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
     procedure SetMergedSource(const ASource: string);
     procedure AddMapping(const AOriginalFile: string; const AOriginalStartLine, AOriginalEndLine: Integer;
       const AMergedStartChar, AMergedEndChar: Integer);
     
-    function MapPosition(const AMergedCharIndex: Integer): TELSourcePosition;
-    function GetMergedLineColumn(const ACharIndex: Integer): TELLineColumn;
+    function MapPosition(const AMergedCharIndex: Integer): TCPSourcePosition;
+    function GetMergedLineColumn(const ACharIndex: Integer): TCPLineColumn;
     function GetSourceLine(const AMergedLine: Integer): string;
     
     procedure Clear();
@@ -76,9 +80,8 @@ type
 
 implementation
 
-{ TELSourcePosition }
-
-class function TELSourcePosition.Create(const AFileName: string; const ALine, AColumn, ACharIndex: Integer): TELSourcePosition;
+{ TCPSourcePosition }
+class function TCPSourcePosition.Create(const AFileName: string; const ALine, AColumn, ACharIndex: Integer): TCPSourcePosition;
 begin
   Result.FileName := AFileName;
   Result.Line := ALine;
@@ -86,40 +89,39 @@ begin
   Result.CharIndex := ACharIndex;
 end;
 
-function TELSourcePosition.ToString(): string;
+function TCPSourcePosition.ToString(): string;
 begin
   Result := Format('%s(%d,%d)', [FileName, Line, Column]);
 end;
 
-{ TELSourceMapper }
-
-constructor TELSourceMapper.Create();
+{ TCPSourceMapper }
+constructor TCPSourceMapper.Create();
 begin
   inherited;
-  FMappings := TList<TELSourceMapEntry>.Create();
+  FMappings := TList<TCPSourceMapEntry>.Create();
   FLineStarts := TList<Integer>.Create();
   FMergedSource := '';
 end;
 
-destructor TELSourceMapper.Destroy();
+destructor TCPSourceMapper.Destroy();
 begin
   FLineStarts.Free();
   FMappings.Free();
   inherited;
 end;
 
-procedure TELSourceMapper.Clear();
+procedure TCPSourceMapper.Clear();
 begin
   FMappings.Clear();
   FLineStarts.Clear();
   FMergedSource := '';
 end;
 
-procedure TELSourceMapper.SetMergedSource(const ASource: string);
+procedure TCPSourceMapper.SetMergedSource(const ASource: string);
 var
   LIndex: Integer;
-  LMapping: TELSourceMapEntry;
-  LMergedPos: TELLineColumn;
+  LMapping: TCPSourceMapEntry;
+  LMergedPos: TCPLineColumn;
 begin
   FMergedSource := ASource;
   BuildLineIndex();
@@ -141,7 +143,7 @@ begin
   end;
 end;
 
-procedure TELSourceMapper.BuildLineIndex();
+procedure TCPSourceMapper.BuildLineIndex();
 var
   LIndex: Integer;
 begin
@@ -158,10 +160,10 @@ begin
   end;
 end;
 
-procedure TELSourceMapper.AddMapping(const AOriginalFile: string; const AOriginalStartLine, AOriginalEndLine: Integer;
+procedure TCPSourceMapper.AddMapping(const AOriginalFile: string; const AOriginalStartLine, AOriginalEndLine: Integer;
   const AMergedStartChar, AMergedEndChar: Integer);
 var
-  LMapping: TELSourceMapEntry;
+  LMapping: TCPSourceMapEntry;
 begin
   LMapping.OriginalFile := AOriginalFile;
   LMapping.OriginalLine := AOriginalStartLine;
@@ -175,10 +177,10 @@ begin
   FMappings.Add(LMapping);
 end;
 
-function TELSourceMapper.MapPosition(const AMergedCharIndex: Integer): TELSourcePosition;
+function TCPSourceMapper.MapPosition(const AMergedCharIndex: Integer): TCPSourcePosition;
 var
-  LMapping: TELSourceMapEntry;
-  LMergedPos: TELLineColumn;
+  LMapping: TCPSourceMapEntry;
+  LMergedPos: TCPLineColumn;
   LOriginalLine: Integer;
   LLineOffset: Integer;
 begin
@@ -196,17 +198,17 @@ begin
       // Map to original line
       LOriginalLine := LMapping.OriginalLine + LLineOffset;
 
-      Result := TELSourcePosition.Create(LMapping.OriginalFile, LOriginalLine, LMergedPos.Column, AMergedCharIndex);
+      Result := TCPSourcePosition.Create(LMapping.OriginalFile, LOriginalLine, LMergedPos.Column, AMergedCharIndex);
       Exit;
     end;
   end;
 
   // Fallback - no mapping found
   LMergedPos := GetMergedLineColumn(AMergedCharIndex);
-  Result := TELSourcePosition.Create('<unknown>', LMergedPos.Line, LMergedPos.Column, AMergedCharIndex);
+  Result := TCPSourcePosition.Create('<unknown>', LMergedPos.Line, LMergedPos.Column, AMergedCharIndex);
 end;
 
-function TELSourceMapper.GetMergedLineColumn(const ACharIndex: Integer): TELLineColumn;
+function TCPSourceMapper.GetMergedLineColumn(const ACharIndex: Integer): TCPLineColumn;
 var
   LLineIndex: Integer;
 begin
@@ -225,7 +227,7 @@ begin
   end;
 end;
 
-function TELSourceMapper.GetSourceLine(const AMergedLine: Integer): string;
+function TCPSourceMapper.GetSourceLine(const AMergedLine: Integer): string;
 var
   LStartPos: Integer;
   LEndPos: Integer;

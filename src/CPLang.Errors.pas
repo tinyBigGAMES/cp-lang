@@ -1,32 +1,36 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Errors;
+unit CPLang.Errors;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common;
+  CPLang.Common;
 
 type
-  { TELErrorSeverity }
-  TELErrorSeverity = (esInfo, esWarning, esError, esFatal);
+  { TCPErrorSeverity }
+  TCPErrorSeverity = (esInfo, esWarning, esError, esFatal);
 
-  { EELException }
-  EELException = class(Exception)
+  { ECPException }
+  ECPException = class(Exception)
   private
     FErrorCode: Integer;
     FErrorCategory: string;
@@ -67,12 +71,12 @@ type
     function GetErrorWithSuggestion(): string;
   end;
 
-  { TELCompilerError }
-  TELCompilerError = class
+  { TCPCompilerError }
+  TCPCompilerError = class
   private
     FMessage: string;
     FErrorCategory: string;
-    FSeverity: TELErrorSeverity;
+    FSeverity: TCPErrorSeverity;
     FSourceFileName: string;
     FLine: Integer;
     FColumn: Integer;
@@ -87,13 +91,13 @@ type
 
   public
     constructor Create(const AMessage, ACategory: string; const AFileName: string; 
-      const ALine, AColumn: Integer; const ASeverity: TELErrorSeverity = esError); overload;
+      const ALine, AColumn: Integer; const ASeverity: TCPErrorSeverity = esError); overload;
       
     // Fluent setters for context
-    function WithTokenContext(const AContext: string; const AExpected: TArray<string>): TELCompilerError;
-    function WithSymbol(const ASymbol: string): TELCompilerError;
-    function WithTypes(const AExpected, AActual: string): TELCompilerError;
-    function WithSuggestion(const ASuggestion: string): TELCompilerError;
+    function WithTokenContext(const AContext: string; const AExpected: TArray<string>): TCPCompilerError;
+    function WithSymbol(const ASymbol: string): TCPCompilerError;
+    function WithTypes(const AExpected, AActual: string): TCPCompilerError;
+    function WithSuggestion(const ASuggestion: string): TCPCompilerError;
     
     function ToString: string; override;
     function GetFormattedLocation: string;
@@ -101,7 +105,7 @@ type
     // Properties (read-only)
     property Message: string read FMessage;
     property ErrorCategory: string read FErrorCategory;
-    property Severity: TELErrorSeverity read FSeverity;
+    property Severity: TCPErrorSeverity read FSeverity;
     property SourceFileName: string read FSourceFileName;
     property Line: Integer read FLine;
     property Column: Integer read FColumn;
@@ -113,17 +117,17 @@ type
     property Suggestion: string read FSuggestion;
   end;
 
-  { TELErrorCollector }
-  TELErrorCollector = class(TELObject)
+  { TCPErrorCollector }
+  TCPErrorCollector = class
   private
-    FErrors: TObjectList<TELCompilerError>;
+    FErrors: TObjectList<TCPCompilerError>;
     FErrorSignatures: THashSet<string>; // For deduplication
 
   public
-    constructor Create; override;
+    constructor Create;
     destructor Destroy; override;
     
-    procedure AddError(const AError: TELCompilerError);
+    procedure AddError(const AError: TCPCompilerError);
     procedure AddParseError(const AMessage: string; const ATokenContext: string; 
       const AExpected: TArray<string>; const AFileName: string; const ALine, AColumn: Integer);
     procedure AddSemanticError(const AMessage: string; const ASymbol: string;
@@ -136,9 +140,9 @@ type
     // Internal deduplication helper
     function GenerateErrorSignature(const AMessage, AFileName: string; const ALine, AColumn: Integer): string;
       
-    function GetErrors: TArray<TELCompilerError>;
-    function GetWarnings: TArray<TELCompilerError>;
-    function GetErrorsByCategory(const ACategory: string): TArray<TELCompilerError>;
+    function GetErrors: TArray<TCPCompilerError>;
+    function GetWarnings: TArray<TCPCompilerError>;
+    function GetErrorsByCategory(const ACategory: string): TArray<TCPCompilerError>;
     
     function HasErrors: Boolean;
     function HasWarnings: Boolean;
@@ -150,9 +154,8 @@ type
 
 implementation
 
-{ EELException }
-
-constructor EELException.Create(const AMessage: string);
+{ ECPException }
+constructor ECPException.Create(const AMessage: string);
 begin
   inherited Create(AMessage);
   FErrorCode := 0;
@@ -167,7 +170,7 @@ begin
   FActualType := '';
 end;
 
-constructor EELException.Create(const AMessage: string; const AArgs: array of const);
+constructor ECPException.Create(const AMessage: string; const AArgs: array of const);
 begin
   try
     inherited Create(Format(AMessage, AArgs));
@@ -188,7 +191,7 @@ begin
   FActualType := '';
 end;
 
-constructor EELException.Create(const AMessage: string; const AArgs: array of const;
+constructor ECPException.Create(const AMessage: string; const AArgs: array of const;
                                const AFileName: string; const ALine, AColumn: Integer);
 begin
   try
@@ -210,7 +213,7 @@ begin
   FActualType := '';
 end;
 
-constructor EELException.Create(const AMessage: string; const AArgs: array of const;
+constructor ECPException.Create(const AMessage: string; const AArgs: array of const;
                                const ASymbol, AFileName: string; const ALine, AColumn: Integer);
 begin
   try
@@ -232,7 +235,7 @@ begin
   FActualType := '';
 end;
 
-constructor EELException.Create(const AMessage: string; const AArgs: array of const;
+constructor ECPException.Create(const AMessage: string; const AArgs: array of const;
                                const AExpectedType, AActualType, AFileName: string;
                                const ALine, AColumn: Integer);
 begin
@@ -255,7 +258,7 @@ begin
   FActualType := AActualType;
 end;
 
-constructor EELException.Create(const AMessage: string; const AArgs: array of const;
+constructor ECPException.Create(const AMessage: string; const AArgs: array of const;
                                const AContext, ASuggestion: string);
 begin
   try
@@ -277,7 +280,7 @@ begin
   FActualType := '';
 end;
 
-function EELException.GetDetailedMessage(): string;
+function ECPException.GetDetailedMessage(): string;
 begin
   Result := Message;
 
@@ -308,7 +311,7 @@ begin
     Result := Result + sLineBreak + 'Suggestion: ' + FSuggestion;
 end;
 
-function EELException.GetFormattedLocation(): string;
+function ECPException.GetFormattedLocation(): string;
 begin
   Result := '';
 
@@ -325,7 +328,7 @@ begin
   end;
 end;
 
-function EELException.GetErrorWithSuggestion(): string;
+function ECPException.GetErrorWithSuggestion(): string;
 begin
   Result := Message;
 
@@ -335,8 +338,8 @@ end;
 
 { TELCompilerError }
 
-constructor TELCompilerError.Create(const AMessage, ACategory: string; const AFileName: string;
-  const ALine, AColumn: Integer; const ASeverity: TELErrorSeverity);
+constructor TCPCompilerError.Create(const AMessage, ACategory: string; const AFileName: string;
+  const ALine, AColumn: Integer; const ASeverity: TCPErrorSeverity);
 begin
   inherited Create;
   FMessage := AMessage;
@@ -353,33 +356,33 @@ begin
   FSuggestion := '';
 end;
 
-function TELCompilerError.WithTokenContext(const AContext: string; const AExpected: TArray<string>): TELCompilerError;
+function TCPCompilerError.WithTokenContext(const AContext: string; const AExpected: TArray<string>): TCPCompilerError;
 begin
   FTokenContext := AContext;
   FExpectedTokens := AExpected;
   Result := Self;
 end;
 
-function TELCompilerError.WithSymbol(const ASymbol: string): TELCompilerError;
+function TCPCompilerError.WithSymbol(const ASymbol: string): TCPCompilerError;
 begin
   FRelatedSymbol := ASymbol;
   Result := Self;
 end;
 
-function TELCompilerError.WithTypes(const AExpected, AActual: string): TELCompilerError;
+function TCPCompilerError.WithTypes(const AExpected, AActual: string): TCPCompilerError;
 begin
   FExpectedType := AExpected;
   FActualType := AActual;
   Result := Self;
 end;
 
-function TELCompilerError.WithSuggestion(const ASuggestion: string): TELCompilerError;
+function TCPCompilerError.WithSuggestion(const ASuggestion: string): TCPCompilerError;
 begin
   FSuggestion := ASuggestion;
   Result := Self;
 end;
 
-function TELCompilerError.ToString: string;
+function TCPCompilerError.ToString: string;
 var
   LFirst: Boolean;
   LToken: string;
@@ -426,7 +429,7 @@ begin
     Result := Result + sLineBreak + 'Suggestion: ' + FSuggestion;
 end;
 
-function TELCompilerError.GetFormattedLocation: string;
+function TCPCompilerError.GetFormattedLocation: string;
 begin
   Result := '';
   
@@ -445,15 +448,15 @@ end;
 
 { TELErrorCollector }
 
-constructor TELErrorCollector.Create;
+constructor TCPErrorCollector.Create;
 begin
   inherited;
 
-  FErrors := TObjectList<TELCompilerError>.Create(True);
+  FErrors := TObjectList<TCPCompilerError>.Create(True);
   FErrorSignatures := THashSet<string>.Create();
 end;
 
-destructor TELErrorCollector.Destroy;
+destructor TCPErrorCollector.Destroy;
 begin
   FErrors.Free;
   FErrorSignatures.Free;
@@ -461,7 +464,7 @@ begin
   inherited;
 end;
 
-procedure TELErrorCollector.AddError(const AError: TELCompilerError);
+procedure TCPErrorCollector.AddError(const AError: TCPCompilerError);
 var
   LSignature: string;
 begin
@@ -484,50 +487,50 @@ begin
   end;
 end;
 
-procedure TELErrorCollector.AddParseError(const AMessage: string; const ATokenContext: string;
+procedure TCPErrorCollector.AddParseError(const AMessage: string; const ATokenContext: string;
   const AExpected: TArray<string>; const AFileName: string; const ALine, AColumn: Integer);
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
-  LError := TELCompilerError.Create(AMessage, 'Syntax', AFileName, ALine, AColumn, esError);
+  LError := TCPCompilerError.Create(AMessage, 'Syntax', AFileName, ALine, AColumn, esError);
   LError.WithTokenContext(ATokenContext, AExpected);
   AddError(LError);
 end;
 
-procedure TELErrorCollector.AddSemanticError(const AMessage: string; const ASymbol: string;
+procedure TCPErrorCollector.AddSemanticError(const AMessage: string; const ASymbol: string;
   const AFileName: string; const ALine, AColumn: Integer);
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
-  LError := TELCompilerError.Create(AMessage, 'Semantic', AFileName, ALine, AColumn, esError);
+  LError := TCPCompilerError.Create(AMessage, 'Semantic', AFileName, ALine, AColumn, esError);
   LError.WithSymbol(ASymbol);
   AddError(LError);
 end;
 
-procedure TELErrorCollector.AddTypeError(const AMessage: string; const AExpected, AActual: string;
+procedure TCPErrorCollector.AddTypeError(const AMessage: string; const AExpected, AActual: string;
   const AFileName: string; const ALine, AColumn: Integer);
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
-  LError := TELCompilerError.Create(AMessage, 'Type', AFileName, ALine, AColumn, esError);
+  LError := TCPCompilerError.Create(AMessage, 'Type', AFileName, ALine, AColumn, esError);
   LError.WithTypes(AExpected, AActual);
   AddError(LError);
 end;
 
-procedure TELErrorCollector.AddWarning(const AMessage, ACategory: string; const AFileName: string;
+procedure TCPErrorCollector.AddWarning(const AMessage, ACategory: string; const AFileName: string;
   const ALine, AColumn: Integer);
 var
-  LWarning: TELCompilerError;
+  LWarning: TCPCompilerError;
 begin
-  LWarning := TELCompilerError.Create(AMessage, ACategory, AFileName, ALine, AColumn, esWarning);
+  LWarning := TCPCompilerError.Create(AMessage, ACategory, AFileName, ALine, AColumn, esWarning);
   AddError(LWarning);
 end;
 
-function TELErrorCollector.GetErrors: TArray<TELCompilerError>;
+function TCPErrorCollector.GetErrors: TArray<TCPCompilerError>;
 var
   LIndex: Integer;
   LCount: Integer;
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   LCount := 0;
   for LError in FErrors do
@@ -548,11 +551,11 @@ begin
   end;
 end;
 
-function TELErrorCollector.GetWarnings: TArray<TELCompilerError>;
+function TCPErrorCollector.GetWarnings: TArray<TCPCompilerError>;
 var
   LIndex: Integer;
   LCount: Integer;
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   LCount := 0;
   for LError in FErrors do
@@ -573,11 +576,11 @@ begin
   end;
 end;
 
-function TELErrorCollector.GetErrorsByCategory(const ACategory: string): TArray<TELCompilerError>;
+function TCPErrorCollector.GetErrorsByCategory(const ACategory: string): TArray<TCPCompilerError>;
 var
   LIndex: Integer;
   LCount: Integer;
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   LCount := 0;
   for LError in FErrors do
@@ -598,9 +601,9 @@ begin
   end;
 end;
 
-function TELErrorCollector.HasErrors: Boolean;
+function TCPErrorCollector.HasErrors: Boolean;
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   for LError in FErrors do
   begin
@@ -610,9 +613,9 @@ begin
   Result := False;
 end;
 
-function TELErrorCollector.HasWarnings: Boolean;
+function TCPErrorCollector.HasWarnings: Boolean;
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   for LError in FErrors do
   begin
@@ -622,9 +625,9 @@ begin
   Result := False;
 end;
 
-function TELErrorCollector.ErrorCount: Integer;
+function TCPErrorCollector.ErrorCount: Integer;
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   Result := 0;
   for LError in FErrors do
@@ -634,9 +637,9 @@ begin
   end;
 end;
 
-function TELErrorCollector.WarningCount: Integer;
+function TCPErrorCollector.WarningCount: Integer;
 var
-  LError: TELCompilerError;
+  LError: TCPCompilerError;
 begin
   Result := 0;
   for LError in FErrors do
@@ -646,13 +649,13 @@ begin
   end;
 end;
 
-procedure TELErrorCollector.Clear;
+procedure TCPErrorCollector.Clear;
 begin
   FErrors.Clear;
   FErrorSignatures.Clear;
 end;
 
-function TELErrorCollector.GenerateErrorSignature(const AMessage, AFileName: string; const ALine, AColumn: Integer): string;
+function TCPErrorCollector.GenerateErrorSignature(const AMessage, AFileName: string; const ALine, AColumn: Integer): string;
 begin
   // Create unique signature: message|filename|line|column
   Result := Format('%s|%s|%d|%d', [AMessage, AFileName, ALine, AColumn]);

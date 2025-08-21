@@ -1,30 +1,34 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Lexer;
+unit CPLang.Lexer;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.SourceMap;
+  CPLang.Common,
+  CPLang.SourceMap;
 
 type
-  { TELTokenType }
-  TELTokenType = (
+  { TCPTokenType }
+  TCPTokenType = (
     // Literals
     ttIdentifier,
     ttIntegerLiteral,
@@ -88,26 +92,27 @@ type
     ttEOF
   );
 
-  { TELToken }
-  TELToken = record
-    TokenType: TELTokenType;
+  { TCPToken }
+  TCPToken = record
+    TokenType: TCPTokenType;
     Value: string;
     Position: Integer;        // Character position in merged source
     Line: Integer;           // Line in merged source
     Column: Integer;         // Column in merged source
-    SourcePos: TELSourcePosition; // Original file position
+    SourcePos: TCPSourcePosition; // Original file position
   end;
 
-  { TELLexer }
-  TELLexer = class(TELObject)
+  { TCPLexer }
+  TCPLexer = class
   private
-    FKeywords: TDictionary<string, TELTokenType>;
+    FKeywords: TDictionary<string, TCPTokenType>;
     FSource: string;
+    FSourceFileName: string;
     FPosition: Integer;
     FLine: Integer;
     FColumn: Integer;
     FCurrentChar: Char;
-    FSourceMapper: TELSourceMapper;
+    FSourceMapper: TCPSourceMapper;
     
     procedure InitKeywords();
     procedure AdvanceChar();
@@ -120,43 +125,43 @@ type
     procedure SkipWhitespace();
     procedure SkipComment();
     
-    function ScanIdentifier(): TELToken;
-    function ScanNumber(): TELToken;
-    function ScanString(): TELToken;
-    function ScanChar(): TELToken;
+    function ScanIdentifier(): TCPToken;
+    function ScanNumber(): TCPToken;
+    function ScanString(): TCPToken;
+    function ScanChar(): TCPToken;
     
-    function MakeToken(const AType: TELTokenType; const AValue: string = ''): TELToken;
+    function MakeToken(const AType: TCPTokenType; const AValue: string = ''): TCPToken;
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
-    procedure SetSource(const ASource: string; const ASourceMapper: TELSourceMapper = nil);
-    function NextToken(): TELToken;
-    function TokenizeAll(): TArray<TELToken>;
-    function GetCurrentSourcePosition(): TELSourcePosition;
+    procedure SetSource(const ASource: string; const ASourceMapper: TCPSourceMapper = nil; const AFileName: string = '<source>');
+    function NextToken(): TCPToken;
+    function TokenizeAll(): TArray<TCPToken>;
+    function GetCurrentSourcePosition(): TCPSourcePosition;
   end;
 
 implementation
 
-{ TELLexer }
-constructor TELLexer.Create();
+{ TCPLexer }
+constructor TCPLexer.Create();
 begin
   inherited;
-  FKeywords := TDictionary<string, TELTokenType>.Create();
+  FKeywords := TDictionary<string, TCPTokenType>.Create();
   InitKeywords();
   FSource := '';
   FPosition := 0;
   FCurrentChar := #0;
 end;
 
-destructor TELLexer.Destroy();
+destructor TCPLexer.Destroy();
 begin
   FKeywords.Free();
   inherited;
 end;
 
-procedure TELLexer.InitKeywords();
+procedure TCPLexer.InitKeywords();
 begin
   // Control flow
   FKeywords.Add('if', ttIf);
@@ -218,9 +223,10 @@ begin
   FKeywords.Add('sizeof', ttSizeof);
 end;
 
-procedure TELLexer.SetSource(const ASource: string; const ASourceMapper: TELSourceMapper);
+procedure TCPLexer.SetSource(const ASource: string; const ASourceMapper: TCPSourceMapper; const AFileName: string);
 begin
   FSource := ASource;
+  FSourceFileName := AFileName;
   FPosition := 1;
   FLine := 1;
   FColumn := 1;
@@ -231,7 +237,7 @@ begin
     FCurrentChar := #0;
 end;
 
-procedure TELLexer.AdvanceChar();
+procedure TCPLexer.AdvanceChar();
 begin
   if FCurrentChar = #10 then
   begin
@@ -260,7 +266,7 @@ begin
     FCurrentChar := #0;
 end;
 
-function TELLexer.PeekChar(const AOffset: Integer): Char;
+function TCPLexer.PeekChar(const AOffset: Integer): Char;
 var
   LPos: Integer;
 begin
@@ -271,36 +277,36 @@ begin
     Result := #0;
 end;
 
-function TELLexer.IsAtEnd(): Boolean;
+function TCPLexer.IsAtEnd(): Boolean;
 begin
   Result := FPosition > Length(FSource);
 end;
 
-function TELLexer.IsAlpha(const AChar: Char): Boolean;
+function TCPLexer.IsAlpha(const AChar: Char): Boolean;
 begin
   Result := ((AChar >= 'a') and (AChar <= 'z')) or
             ((AChar >= 'A') and (AChar <= 'Z')) or
             (AChar = '_');
 end;
 
-function TELLexer.IsDigit(const AChar: Char): Boolean;
+function TCPLexer.IsDigit(const AChar: Char): Boolean;
 begin
   Result := (AChar >= '0') and (AChar <= '9');
 end;
 
-function TELLexer.IsAlphaNumeric(const AChar: Char): Boolean;
+function TCPLexer.IsAlphaNumeric(const AChar: Char): Boolean;
 begin
   Result := IsAlpha(AChar) or IsDigit(AChar);
 end;
 
-procedure TELLexer.SkipWhitespace();
+procedure TCPLexer.SkipWhitespace();
 begin
   while (FCurrentChar = ' ') or (FCurrentChar = #9) or 
         (FCurrentChar = #13) or (FCurrentChar = #10) do
     AdvanceChar();
 end;
 
-procedure TELLexer.SkipComment();
+procedure TCPLexer.SkipComment();
 begin
   if (FCurrentChar = '/') and (PeekChar() = '/') then
   begin
@@ -327,11 +333,11 @@ begin
   end;
 end;
 
-function TELLexer.ScanIdentifier(): TELToken;
+function TCPLexer.ScanIdentifier(): TCPToken;
 var
   LStart: Integer;
   LValue: string;
-  LTokenType: TELTokenType;
+  LTokenType: TCPTokenType;
 begin
   LStart := FPosition;
   
@@ -346,7 +352,7 @@ begin
     Result := MakeToken(ttIdentifier, LValue);
 end;
 
-function TELLexer.ScanNumber(): TELToken;
+function TCPLexer.ScanNumber(): TCPToken;
 var
   LStart: Integer;
   LValue: string;
@@ -377,7 +383,7 @@ begin
     Result := MakeToken(ttIntegerLiteral, LValue);
 end;
 
-function TELLexer.ScanString(): TELToken;
+function TCPLexer.ScanString(): TCPToken;
 var
   LStart: Integer;
   LValue: string;
@@ -404,7 +410,7 @@ begin
   Result := MakeToken(ttStringLiteral, LValue);
 end;
 
-function TELLexer.ScanChar(): TELToken;
+function TCPLexer.ScanChar(): TCPToken;
 var
   LStart: Integer;
   LValue: string;
@@ -428,7 +434,7 @@ begin
   Result := MakeToken(ttCharLiteral, LValue);
 end;
 
-function TELLexer.MakeToken(const AType: TELTokenType; const AValue: string): TELToken;
+function TCPLexer.MakeToken(const AType: TCPTokenType; const AValue: string): TCPToken;
 begin
   Result.TokenType := AType;
   Result.Value := AValue;
@@ -438,15 +444,15 @@ begin
   Result.SourcePos := GetCurrentSourcePosition();
 end;
 
-function TELLexer.GetCurrentSourcePosition(): TELSourcePosition;
+function TCPLexer.GetCurrentSourcePosition(): TCPSourcePosition;
 begin
   if Assigned(FSourceMapper) then
     Result := FSourceMapper.MapPosition(FPosition)
   else
-    Result := TELSourcePosition.Create('<unknown>', FLine, FColumn, FPosition);
+    Result := TCPSourcePosition.Create(FSourceFileName, FLine, FColumn, FPosition);
 end;
 
-function TELLexer.NextToken(): TELToken;
+function TCPLexer.NextToken(): TCPToken;
 begin
   repeat
     SkipWhitespace();
@@ -624,12 +630,12 @@ begin
   end;
 end;
 
-function TELLexer.TokenizeAll(): TArray<TELToken>;
+function TCPLexer.TokenizeAll(): TArray<TCPToken>;
 var
-  LTokens: TList<TELToken>;
-  LToken: TELToken;
+  LTokens: TList<TCPToken>;
+  LToken: TCPToken;
 begin
-  LTokens := TList<TELToken>.Create();
+  LTokens := TList<TCPToken>.Create();
   try
     repeat
       LToken := NextToken();

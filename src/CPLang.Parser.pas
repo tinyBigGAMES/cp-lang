@@ -1,31 +1,35 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
+
+ https://cp-lang.org/
+
+ See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Parser;
+unit CPLang.Parser;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
   System.Generics.Collections,
-  ELang.Common,
-  ELang.Lexer,
-  ELang.Errors;
+  CPLang.Common,
+  CPLang.Lexer,
+  CPLang.Errors;
 
 type
-  { TELASTNodeType }
-  TELASTNodeType = (
+  { TCPASTNodeType }
+  TCPASTNodeType = (
     astProgram,
     astMainFunction,
     astVariableDecl,
@@ -57,116 +61,120 @@ type
     astArgumentList
   );
 
-  { TELASTNode }
-  TELASTNode = class
+  { TCPASTNode }
+  TCPASTNode = class
   private
-    FNodeType: TELASTNodeType;
+    FNodeType: TCPASTNodeType;
     FValue: string;
     FPosition: Integer;
-    FChildren: TObjectList<TELASTNode>;
+    FChildren: TObjectList<TCPASTNode>;
     
   public
-    constructor Create(const ANodeType: TELASTNodeType; const AValue: string = '');
+    constructor Create(const ANodeType: TCPASTNodeType; const AValue: string = '');
     destructor Destroy(); override;
     
-    procedure AddChild(const AChild: TELASTNode);
-    function GetChild(const AIndex: Integer): TELASTNode;
+    procedure AddChild(const AChild: TCPASTNode);
+    function GetChild(const AIndex: Integer): TCPASTNode;
     function ChildCount(): Integer;
     
-    property NodeType: TELASTNodeType read FNodeType;
+    property NodeType: TCPASTNodeType read FNodeType;
     property Value: string read FValue write FValue;
     property Position: Integer read FPosition write FPosition;
   end;
 
-  { TELParser }
-  TELParser = class(TELObject)
+  { TCPParser }
+  TCPParser = class
   private
-    FTokens: TArray<TELToken>;
+    FTokens: TArray<TCPToken>;
     FCurrentIndex: Integer;
-    FCurrentToken: TELToken;
+    FCurrentToken: TCPToken;
     
     procedure AdvanceToken();
-    function PeekToken(const AOffset: Integer = 1): TELToken;
+    function PeekToken(const AOffset: Integer = 1): TCPToken;
     function IsAtEnd(): Boolean;
-    function Match(const ATokenType: TELTokenType): Boolean;
-    function Consume(const ATokenType: TELTokenType; const AMessage: string): TELToken;
-    function Check(const ATokenType: TELTokenType): Boolean;
+    function Match(const ATokenType: TCPTokenType): Boolean;
+    function Consume(const ATokenType: TCPTokenType; const AMessage: string): TCPToken;
+    function Check(const ATokenType: TCPTokenType): Boolean;
+    
+    // Helper methods for creating positioned AST nodes
+    function CreatePositionedNode(const ANodeType: TCPASTNodeType; const AValue: string = ''): TCPASTNode;
+    function CreateIdentifierNode(const AValue: string): TCPASTNode;
+    function CreateLiteralNode(const AValue: string): TCPASTNode;
     
     // Grammar rules - direct from BNF
-    function ParseProgram(): TELASTNode;
-    function ParseMainFunction(): TELASTNode;
-    function ParseDeclaration(): TELASTNode;
-    function ParseVariableDeclaration(): TELASTNode;
-    function ParseFunctionDeclaration(): TELASTNode;
-    function ParseTypeDeclaration(): TELASTNode;
-    function ParseFunctionHeader(): TELASTNode;
-    function ParseParameterList(): TELASTNode;
-    function ParseParamDef(): TELASTNode;
-    function ParseTypeSpec(): TELASTNode;
-    function ParseBasicType(): TELASTNode;
-    function ParsePointerType(): TELASTNode;
-    function ParseArrayType(): TELASTNode;
-    function ParseRecordType(): TELASTNode;
-    function ParseStatement(): TELASTNode;
-    function ParseStatementBlock(): TELASTNode;
-    function ParseStatementList(): TELASTNode;
-    function ParseAssignmentStatement(): TELASTNode;
-    function ParseIfStatement(): TELASTNode;
-    function ParseWhileStatement(): TELASTNode;
-    function ParseForStatement(): TELASTNode;
-    function ParseRepeatStatement(): TELASTNode;
-    function ParseCaseStatement(): TELASTNode;
-    function ParseReturnStatement(): TELASTNode;
-    function ParseCallStatement(): TELASTNode;
-    function ParseCaseItem(): TELASTNode;
-    function ParseCaseLabels(): TELASTNode;
-    function ParseExpression(): TELASTNode;
-    function ParseConditionalExpression(): TELASTNode;
-    function ParseLogicalOrExpression(): TELASTNode;
-    function ParseLogicalAndExpression(): TELASTNode;
-    function ParseEqualityExpression(): TELASTNode;
-    function ParseRelationalExpression(): TELASTNode;
-    function ParseAdditiveExpression(): TELASTNode;
-    function ParseMultiplicativeExpression(): TELASTNode;
-    function ParseUnaryExpression(): TELASTNode;
-    function ParsePostfixExpression(): TELASTNode;
-    function ParsePrimaryExpression(): TELASTNode;
-    function ParseArgumentList(): TELASTNode;
-    function ParseLValue(): TELASTNode;
+    function ParseProgram(): TCPASTNode;
+    function ParseMainFunction(): TCPASTNode;
+    function ParseDeclaration(): TCPASTNode;
+    function ParseVariableDeclaration(): TCPASTNode;
+    function ParseFunctionDeclaration(): TCPASTNode;
+    function ParseTypeDeclaration(): TCPASTNode;
+    function ParseFunctionHeader(): TCPASTNode;
+    function ParseParameterList(): TCPASTNode;
+    function ParseParamDef(): TCPASTNode;
+    function ParseTypeSpec(): TCPASTNode;
+    function ParseBasicType(): TCPASTNode;
+    function ParsePointerType(): TCPASTNode;
+    function ParseArrayType(): TCPASTNode;
+    function ParseRecordType(): TCPASTNode;
+    function ParseStatement(): TCPASTNode;
+    function ParseStatementBlock(): TCPASTNode;
+    function ParseStatementList(): TCPASTNode;
+    function ParseAssignmentStatement(): TCPASTNode;
+    function ParseIfStatement(): TCPASTNode;
+    function ParseWhileStatement(): TCPASTNode;
+    function ParseForStatement(): TCPASTNode;
+    function ParseRepeatStatement(): TCPASTNode;
+    function ParseCaseStatement(): TCPASTNode;
+    function ParseReturnStatement(): TCPASTNode;
+    function ParseCallStatement(): TCPASTNode;
+    function ParseCaseItem(): TCPASTNode;
+    function ParseCaseLabels(): TCPASTNode;
+    function ParseExpression(): TCPASTNode;
+    function ParseConditionalExpression(): TCPASTNode;
+    function ParseLogicalOrExpression(): TCPASTNode;
+    function ParseLogicalAndExpression(): TCPASTNode;
+    function ParseEqualityExpression(): TCPASTNode;
+    function ParseRelationalExpression(): TCPASTNode;
+    function ParseAdditiveExpression(): TCPASTNode;
+    function ParseMultiplicativeExpression(): TCPASTNode;
+    function ParseUnaryExpression(): TCPASTNode;
+    function ParsePostfixExpression(): TCPASTNode;
+    function ParsePrimaryExpression(): TCPASTNode;
+    function ParseArgumentList(): TCPASTNode;
+    function ParseLValue(): TCPASTNode;
     
   public
-    constructor Create(); override;
+    constructor Create();
     destructor Destroy(); override;
     
-    function Parse(const ATokens: TArray<TELToken>): TELASTNode;
+    function Parse(const ATokens: TArray<TCPToken>): TCPASTNode;
   end;
 
 implementation
 
-{ TELASTNode }
-
-constructor TELASTNode.Create(const ANodeType: TELASTNodeType; const AValue: string);
+{ TCPASTNode }
+constructor TCPASTNode.Create(const ANodeType: TCPASTNodeType; const AValue: string);
 begin
   inherited Create();
   FNodeType := ANodeType;
   FValue := AValue;
   FPosition := 0;
-  FChildren := TObjectList<TELASTNode>.Create(True);
+  FChildren := TObjectList<TCPASTNode>.Create(True);
 end;
 
-destructor TELASTNode.Destroy();
+destructor TCPASTNode.Destroy();
 begin
   FChildren.Free();
   inherited;
 end;
 
-procedure TELASTNode.AddChild(const AChild: TELASTNode);
+procedure TCPASTNode.AddChild(const AChild: TCPASTNode);
 begin
   if Assigned(AChild) then
     FChildren.Add(AChild);
 end;
 
-function TELASTNode.GetChild(const AIndex: Integer): TELASTNode;
+function TCPASTNode.GetChild(const AIndex: Integer): TCPASTNode;
 begin
   if (AIndex >= 0) and (AIndex < FChildren.Count) then
     Result := FChildren[AIndex]
@@ -174,14 +182,13 @@ begin
     Result := nil;
 end;
 
-function TELASTNode.ChildCount(): Integer;
+function TCPASTNode.ChildCount(): Integer;
 begin
   Result := FChildren.Count;
 end;
 
-{ TELParser }
-
-constructor TELParser.Create();
+{ TCPParser }
+constructor TCPParser.Create();
 begin
   inherited;
   SetLength(FTokens, 0);
@@ -189,12 +196,12 @@ begin
   FCurrentToken.TokenType := ttEOF;
 end;
 
-destructor TELParser.Destroy();
+destructor TCPParser.Destroy();
 begin
   inherited;
 end;
 
-function TELParser.Parse(const ATokens: TArray<TELToken>): TELASTNode;
+function TCPParser.Parse(const ATokens: TArray<TCPToken>): TCPASTNode;
 begin
   FTokens := ATokens;
   FCurrentIndex := 0;
@@ -206,7 +213,7 @@ begin
   Result := ParseProgram();
 end;
 
-procedure TELParser.AdvanceToken();
+procedure TCPParser.AdvanceToken();
 begin
   if FCurrentIndex < High(FTokens) then
   begin
@@ -219,7 +226,7 @@ begin
   end;
 end;
 
-function TELParser.PeekToken(const AOffset: Integer): TELToken;
+function TCPParser.PeekToken(const AOffset: Integer): TCPToken;
 var
   LIndex: Integer;
 begin
@@ -230,12 +237,12 @@ begin
     Result.TokenType := ttEOF;
 end;
 
-function TELParser.IsAtEnd(): Boolean;
+function TCPParser.IsAtEnd(): Boolean;
 begin
   Result := FCurrentToken.TokenType = ttEOF;
 end;
 
-function TELParser.Match(const ATokenType: TELTokenType): Boolean;
+function TCPParser.Match(const ATokenType: TCPTokenType): Boolean;
 begin
   if Check(ATokenType) then
   begin
@@ -246,7 +253,7 @@ begin
     Result := False;
 end;
 
-function TELParser.Consume(const ATokenType: TELTokenType; const AMessage: string): TELToken;
+function TCPParser.Consume(const ATokenType: TCPTokenType; const AMessage: string): TCPToken;
 begin
   if Check(ATokenType) then
   begin
@@ -254,11 +261,11 @@ begin
     AdvanceToken();
   end
   else
-    raise EELException.Create('Parse error: %s. Got %s', [AMessage, FCurrentToken.Value], 
+    raise ECPException.Create('Parse error: %s. Got %s', [AMessage, FCurrentToken.Value],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
 end;
 
-function TELParser.Check(const ATokenType: TELTokenType): Boolean;
+function TCPParser.Check(const ATokenType: TCPTokenType): Boolean;
 begin
   if IsAtEnd() then
     Result := False
@@ -266,12 +273,30 @@ begin
     Result := FCurrentToken.TokenType = ATokenType;
 end;
 
-function TELParser.ParseProgram(): TELASTNode;
-var
-  LProgram: TELASTNode;
-  LDeclaration: TELASTNode;
+function TCPParser.CreatePositionedNode(const ANodeType: TCPASTNodeType; const AValue: string): TCPASTNode;
 begin
-  LProgram := TELASTNode.Create(astProgram);
+  Result := TCPASTNode.Create(ANodeType, AValue);
+  Result.Position := FCurrentToken.SourcePos.CharIndex;
+end;
+
+function TCPParser.CreateIdentifierNode(const AValue: string): TCPASTNode;
+begin
+  Result := TCPASTNode.Create(astIdentifier, AValue);
+  Result.Position := FCurrentToken.SourcePos.CharIndex;
+end;
+
+function TCPParser.CreateLiteralNode(const AValue: string): TCPASTNode;
+begin
+  Result := TCPASTNode.Create(astLiteral, AValue);
+  Result.Position := FCurrentToken.SourcePos.CharIndex;
+end;
+
+function TCPParser.ParseProgram(): TCPASTNode;
+var
+  LProgram: TCPASTNode;
+  LDeclaration: TCPASTNode;
+begin
+  LProgram := TCPASTNode.Create(astProgram);
   
   // Parse all declarations and functions in any order
   while not IsAtEnd() do
@@ -284,13 +309,13 @@ begin
   Result := LProgram;
 end;
 
-function TELParser.ParseMainFunction(): TELASTNode;
+function TCPParser.ParseMainFunction(): TCPASTNode;
 var
-  LMainFunc: TELASTNode;
-  LHeader: TELASTNode;
-  LBlock: TELASTNode;
+  LMainFunc: TCPASTNode;
+  LHeader: TCPASTNode;
+  LBlock: TCPASTNode;
 begin
-  LMainFunc := TELASTNode.Create(astMainFunction);
+  LMainFunc := TCPASTNode.Create(astMainFunction);
   
   LHeader := ParseFunctionHeader();
   LMainFunc.AddChild(LHeader);
@@ -301,7 +326,7 @@ begin
   Result := LMainFunc;
 end;
 
-function TELParser.ParseDeclaration(): TELASTNode;
+function TCPParser.ParseDeclaration(): TCPASTNode;
 begin
   case FCurrentToken.TokenType of
     ttVar, ttConst:
@@ -320,18 +345,18 @@ begin
   end;
 end;
 
-function TELParser.ParseVariableDeclaration(): TELASTNode;
+function TCPParser.ParseVariableDeclaration(): TCPASTNode;
 var
-  LVarDecl: TELASTNode;
-  LTypeSpec: TELASTNode;
+  LVarDecl: TCPASTNode;
+  LTypeSpec: TCPASTNode;
 begin
-  LVarDecl := TELASTNode.Create(astVariableDecl);
+  LVarDecl := TCPASTNode.Create(astVariableDecl);
   
   if Match(ttVar) or Match(ttConst) then
   begin
     // identifier_list
     repeat
-      LVarDecl.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+      LVarDecl.AddChild(CreateIdentifierNode(FCurrentToken.Value));
       Consume(ttIdentifier, 'Expected identifier');
     until not Match(ttComma);
     
@@ -352,14 +377,14 @@ begin
   Result := LVarDecl;
 end;
 
-function TELParser.ParseFunctionDeclaration(): TELASTNode;
+function TCPParser.ParseFunctionDeclaration(): TCPASTNode;
 var
-  LFuncDecl: TELASTNode;
-  LHeader: TELASTNode;
-  LBlock: TELASTNode;
-  LExternalNode: TELASTNode;
+  LFuncDecl: TCPASTNode;
+  LHeader: TCPASTNode;
+  LBlock: TCPASTNode;
+  LExternalNode: TCPASTNode;
 begin
-  LFuncDecl := TELASTNode.Create(astFunctionDecl);
+  LFuncDecl := TCPASTNode.Create(astFunctionDecl);
   
   LHeader := ParseFunctionHeader();
   LFuncDecl.AddChild(LHeader);
@@ -368,7 +393,7 @@ begin
   if Check(ttExternal) then
   begin
     AdvanceToken(); // consume "external"
-    LExternalNode := TELASTNode.Create(astLiteral, FCurrentToken.Value);
+    LExternalNode := CreateLiteralNode(FCurrentToken.Value);
     Consume(ttStringLiteral, 'Expected library name');
     LFuncDecl.AddChild(LExternalNode);
     Consume(ttSemicolon, 'Expected ";"');
@@ -383,15 +408,15 @@ begin
   Result := LFuncDecl;
 end;
 
-function TELParser.ParseTypeDeclaration(): TELASTNode;
+function TCPParser.ParseTypeDeclaration(): TCPASTNode;
 var
-  LTypeDecl: TELASTNode;
-  LTypeSpec: TELASTNode;
+  LTypeDecl: TCPASTNode;
+  LTypeSpec: TCPASTNode;
 begin
-  LTypeDecl := TELASTNode.Create(astTypeDecl);
+  LTypeDecl := TCPASTNode.Create(astTypeDecl);
   
   Consume(ttType, 'Expected "type"');
-  LTypeDecl.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+  LTypeDecl.AddChild(CreateIdentifierNode(FCurrentToken.Value));
   Consume(ttIdentifier, 'Expected identifier');
   Consume(ttEqual, 'Expected "="');
   
@@ -403,31 +428,31 @@ begin
   Result := LTypeDecl;
 end;
 
-function TELParser.ParseFunctionHeader(): TELASTNode;
+function TCPParser.ParseFunctionHeader(): TCPASTNode;
 var
-  LHeader: TELASTNode;
-  LParams: TELASTNode;
-  LReturnType: TELASTNode;
+  LHeader: TCPASTNode;
+  LParams: TCPASTNode;
+  LReturnType: TCPASTNode;
 begin
-  LHeader := TELASTNode.Create(astFunctionDecl);
+  LHeader := TCPASTNode.Create(astFunctionDecl);
   
   if Match(ttFunction) then
     LHeader.Value := 'function'
   else if Match(ttProcedure) then
     LHeader.Value := 'procedure'
   else
-    raise EELException.Create('Expected "function" or "procedure"', [], 
+    raise ECPException.Create('Expected "function" or "procedure"', [],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
     
   // Handle function name (could be identifier or special 'main' keyword)
   if FCurrentToken.TokenType = ttMain then
   begin
-    LHeader.AddChild(TELASTNode.Create(astIdentifier, 'main'));
+    LHeader.AddChild(CreateIdentifierNode('main'));
     AdvanceToken();
   end
   else
   begin
-    LHeader.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+    LHeader.AddChild(CreateIdentifierNode(FCurrentToken.Value));
     Consume(ttIdentifier, 'Expected function name');
   end;
   
@@ -444,13 +469,13 @@ begin
   Result := LHeader;
 end;
 
-function TELParser.ParseParameterList(): TELASTNode;
+function TCPParser.ParseParameterList(): TCPASTNode;
 var
-  LParams: TELASTNode;
-  LParam: TELASTNode;
-  LEllipsis: TELASTNode;
+  LParams: TCPASTNode;
+  LParam: TCPASTNode;
+  LEllipsis: TCPASTNode;
 begin
-  LParams := TELASTNode.Create(astParameterList);
+  LParams := TCPASTNode.Create(astParameterList);
   
   Consume(ttLeftParen, 'Expected "("');
   
@@ -459,7 +484,7 @@ begin
     // Check for standalone ellipsis: "..."
     if Check(ttEllipsis) then
     begin
-      LEllipsis := TELASTNode.Create(astParameterList, '...');
+      LEllipsis := TCPASTNode.Create(astParameterList, '...');
       AdvanceToken();
       LParams.AddChild(LEllipsis);
     end
@@ -475,7 +500,7 @@ begin
           // Check if next token is ellipsis
           if Check(ttEllipsis) then
           begin
-            LEllipsis := TELASTNode.Create(astParameterList, '...');
+            LEllipsis := TCPASTNode.Create(astParameterList, '...');
             AdvanceToken();
             LParams.AddChild(LEllipsis);
             Break; // End parameter list after ellipsis
@@ -493,12 +518,12 @@ begin
   Result := LParams;
 end;
 
-function TELParser.ParseParamDef(): TELASTNode;
+function TCPParser.ParseParamDef(): TCPASTNode;
 var
-  LParam: TELASTNode;
-  LTypeSpec: TELASTNode;
+  LParam: TCPASTNode;
+  LTypeSpec: TCPASTNode;
 begin
-  LParam := TELASTNode.Create(astParameterList);
+  LParam := TCPASTNode.Create(astParameterList);
   
   // Optional parameter modifier
   if Check(ttRef) or Check(ttConst) then
@@ -509,7 +534,7 @@ begin
   
   // identifier_list
   repeat
-    LParam.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+    LParam.AddChild(CreateIdentifierNode(FCurrentToken.Value));
     Consume(ttIdentifier, 'Expected parameter name');
   until not Match(ttComma);
   
@@ -521,7 +546,7 @@ begin
   Result := LParam;
 end;
 
-function TELParser.ParseTypeSpec(): TELASTNode;
+function TCPParser.ParseTypeSpec(): TCPASTNode;
 begin
   case FCurrentToken.TokenType of
     ttInt, ttChar, ttBool, ttFloat, ttDouble,
@@ -536,27 +561,27 @@ begin
       Result := ParseRecordType();
     ttIdentifier:
       begin
-        Result := TELASTNode.Create(astTypeSpec, FCurrentToken.Value);
+        Result := CreatePositionedNode(astTypeSpec, FCurrentToken.Value);
         AdvanceToken();
       end;
   else
-    raise EELException.Create('Expected type specification', [], 
+    raise ECPException.Create('Expected type specification', [],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
   end;
 end;
 
-function TELParser.ParseBasicType(): TELASTNode;
+function TCPParser.ParseBasicType(): TCPASTNode;
 begin
-  Result := TELASTNode.Create(astTypeSpec, FCurrentToken.Value);
+  Result := CreatePositionedNode(astTypeSpec, FCurrentToken.Value);
   AdvanceToken();
 end;
 
-function TELParser.ParsePointerType(): TELASTNode;
+function TCPParser.ParsePointerType(): TCPASTNode;
 var
-  LPointer: TELASTNode;
-  LTargetType: TELASTNode;
+  LPointer: TCPASTNode;
+  LTargetType: TCPASTNode;
 begin
-  LPointer := TELASTNode.Create(astTypeSpec, '^');
+  LPointer := CreatePositionedNode(astTypeSpec, '^');
   Consume(ttPower, 'Expected "^"');
   
   LTargetType := ParseTypeSpec();
@@ -565,13 +590,13 @@ begin
   Result := LPointer;
 end;
 
-function TELParser.ParseArrayType(): TELASTNode;
+function TCPParser.ParseArrayType(): TCPASTNode;
 var
-  LArray: TELASTNode;
-  LSize: TELASTNode;
-  LElementType: TELASTNode;
+  LArray: TCPASTNode;
+  LSize: TCPASTNode;
+  LElementType: TCPASTNode;
 begin
-  LArray := TELASTNode.Create(astTypeSpec, 'array');
+  LArray := CreatePositionedNode(astTypeSpec, 'array');
   Consume(ttArray, 'Expected "array"');
   Consume(ttLeftBracket, 'Expected "["');
   
@@ -590,23 +615,23 @@ begin
   Result := LArray;
 end;
 
-function TELParser.ParseRecordType(): TELASTNode;
+function TCPParser.ParseRecordType(): TCPASTNode;
 var
-  LRecord: TELASTNode;
-  LField: TELASTNode;
-  LFieldType: TELASTNode;
+  LRecord: TCPASTNode;
+  LField: TCPASTNode;
+  LFieldType: TCPASTNode;
 begin
-  LRecord := TELASTNode.Create(astTypeSpec, 'record');
+  LRecord := CreatePositionedNode(astTypeSpec, 'record');
   Consume(ttRecord, 'Expected "record"');
   
   // field_list
   while not Check(ttEnd) do
   begin
     // field_def: identifier_list : type_spec
-    LField := TELASTNode.Create(astVariableDecl);
+    LField := TCPASTNode.Create(astVariableDecl);
     
     repeat
-      LField.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+      LField.AddChild(CreateIdentifierNode(FCurrentToken.Value));
       Consume(ttIdentifier, 'Expected field name');
     until not Match(ttComma);
     
@@ -626,7 +651,7 @@ begin
   Result := LRecord;
 end;
 
-function TELParser.ParseStatement(): TELASTNode;
+function TCPParser.ParseStatement(): TCPASTNode;
 begin
   case FCurrentToken.TokenType of
     ttBegin:
@@ -645,21 +670,21 @@ begin
       Result := ParseReturnStatement();
     ttBreak:
       begin
-        Result := TELASTNode.Create(astBreakStatement);
+        Result := TCPASTNode.Create(astBreakStatement);
         AdvanceToken();
         Consume(ttSemicolon, 'Expected ";"');
       end;
     ttContinue:
       begin
-        Result := TELASTNode.Create(astContinueStatement);
+        Result := TCPASTNode.Create(astContinueStatement);
         AdvanceToken();
         Consume(ttSemicolon, 'Expected ";"');
       end;
     ttGoto:
       begin
-        Result := TELASTNode.Create(astGotoStatement);
+        Result := TCPASTNode.Create(astGotoStatement);
         AdvanceToken();
-        Result.AddChild(TELASTNode.Create(astIdentifier, FCurrentToken.Value));
+        Result.AddChild(CreateIdentifierNode(FCurrentToken.Value));
         Consume(ttIdentifier, 'Expected label');
         Consume(ttSemicolon, 'Expected ";"');
       end;
@@ -676,12 +701,12 @@ begin
   end;
 end;
 
-function TELParser.ParseStatementBlock(): TELASTNode;
+function TCPParser.ParseStatementBlock(): TCPASTNode;
 var
-  LBlock: TELASTNode;
-  LStatementList: TELASTNode;
+  LBlock: TCPASTNode;
+  LStatementList: TCPASTNode;
 begin
-  LBlock := TELASTNode.Create(astStatementBlock);
+  LBlock := TCPASTNode.Create(astStatementBlock);
   
   Consume(ttBegin, 'Expected "begin"');
   
@@ -693,12 +718,12 @@ begin
   Result := LBlock;
 end;
 
-function TELParser.ParseStatementList(): TELASTNode;
+function TCPParser.ParseStatementList(): TCPASTNode;
 var
-  LStatementList: TELASTNode;
-  LStatement: TELASTNode;
+  LStatementList: TCPASTNode;
+  LStatement: TCPASTNode;
 begin
-  LStatementList := TELASTNode.Create(astStatementBlock);
+  LStatementList := TCPASTNode.Create(astStatementBlock);
   
   while not Check(ttEnd) and not Check(ttElse) and not Check(ttUntil) and not IsAtEnd() do
   begin
@@ -719,13 +744,13 @@ begin
   Result := LStatementList;
 end;
 
-function TELParser.ParseAssignmentStatement(): TELASTNode;
+function TCPParser.ParseAssignmentStatement(): TCPASTNode;
 var
-  LAssign: TELASTNode;
-  LLValue: TELASTNode;
-  LExpression: TELASTNode;
+  LAssign: TCPASTNode;
+  LLValue: TCPASTNode;
+  LExpression: TCPASTNode;
 begin
-  LAssign := TELASTNode.Create(astAssignment);
+  LAssign := TCPASTNode.Create(astAssignment);
   
   LLValue := ParseLValue();
   LAssign.AddChild(LLValue);
@@ -740,14 +765,14 @@ begin
   Result := LAssign;
 end;
 
-function TELParser.ParseIfStatement(): TELASTNode;
+function TCPParser.ParseIfStatement(): TCPASTNode;
 var
-  LIf: TELASTNode;
-  LCondition: TELASTNode;
-  LThenStmt: TELASTNode;
-  LElseStmt: TELASTNode;
+  LIf: TCPASTNode;
+  LCondition: TCPASTNode;
+  LThenStmt: TCPASTNode;
+  LElseStmt: TCPASTNode;
 begin
-  LIf := TELASTNode.Create(astIfStatement);
+  LIf := TCPASTNode.Create(astIfStatement);
   
   Consume(ttIf, 'Expected "if"');
   
@@ -768,13 +793,13 @@ begin
   Result := LIf;
 end;
 
-function TELParser.ParseWhileStatement(): TELASTNode;
+function TCPParser.ParseWhileStatement(): TCPASTNode;
 var
-  LWhile: TELASTNode;
-  LCondition: TELASTNode;
-  LStatement: TELASTNode;
+  LWhile: TCPASTNode;
+  LCondition: TCPASTNode;
+  LStatement: TCPASTNode;
 begin
-  LWhile := TELASTNode.Create(astWhileStatement);
+  LWhile := TCPASTNode.Create(astWhileStatement);
   
   Consume(ttWhile, 'Expected "while"');
   
@@ -789,19 +814,19 @@ begin
   Result := LWhile;
 end;
 
-function TELParser.ParseForStatement(): TELASTNode;
+function TCPParser.ParseForStatement(): TCPASTNode;
 var
-  LFor: TELASTNode;
-  LVariable: TELASTNode;
-  LStartExpr: TELASTNode;
-  LEndExpr: TELASTNode;
-  LStatement: TELASTNode;
+  LFor: TCPASTNode;
+  LVariable: TCPASTNode;
+  LStartExpr: TCPASTNode;
+  LEndExpr: TCPASTNode;
+  LStatement: TCPASTNode;
 begin
-  LFor := TELASTNode.Create(astForStatement);
+  LFor := TCPASTNode.Create(astForStatement);
   
   Consume(ttFor, 'Expected "for"');
   
-  LVariable := TELASTNode.Create(astIdentifier, FCurrentToken.Value);
+  LVariable := CreateIdentifierNode(FCurrentToken.Value);
   Consume(ttIdentifier, 'Expected loop variable');
   LFor.AddChild(LVariable);
   
@@ -815,7 +840,7 @@ begin
   else if Match(ttDownto) then
     LFor.Value := 'downto'
   else
-    raise EELException.Create('Expected "to" or "downto"', [], 
+    raise ECPException.Create('Expected "to" or "downto"', [],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
     
   LEndExpr := ParseExpression();
@@ -829,13 +854,13 @@ begin
   Result := LFor;
 end;
 
-function TELParser.ParseRepeatStatement(): TELASTNode;
+function TCPParser.ParseRepeatStatement(): TCPASTNode;
 var
-  LRepeat: TELASTNode;
-  LStatementList: TELASTNode;
-  LCondition: TELASTNode;
+  LRepeat: TCPASTNode;
+  LStatementList: TCPASTNode;
+  LCondition: TCPASTNode;
 begin
-  LRepeat := TELASTNode.Create(astRepeatStatement);
+  LRepeat := TCPASTNode.Create(astRepeatStatement);
   
   Consume(ttRepeat, 'Expected "repeat"');
   
@@ -850,14 +875,14 @@ begin
   Result := LRepeat;
 end;
 
-function TELParser.ParseCaseStatement(): TELASTNode;
+function TCPParser.ParseCaseStatement(): TCPASTNode;
 var
-  LCase: TELASTNode;
-  LExpression: TELASTNode;
-  LCaseItem: TELASTNode;
-  LElseClause: TELASTNode;
+  LCase: TCPASTNode;
+  LExpression: TCPASTNode;
+  LCaseItem: TCPASTNode;
+  LElseClause: TCPASTNode;
 begin
-  LCase := TELASTNode.Create(astCaseStatement);
+  LCase := TCPASTNode.Create(astCaseStatement);
   
   Consume(ttCase, 'Expected "case"');
   
@@ -877,7 +902,7 @@ begin
   // Parse optional else clause
   if Match(ttElse) then
   begin
-    LElseClause := TELASTNode.Create(astStatementBlock, 'else');
+    LElseClause := TCPASTNode.Create(astStatementBlock, 'else');
     LElseClause.AddChild(ParseStatementList());
     LCase.AddChild(LElseClause);
   end;
@@ -887,13 +912,13 @@ begin
   Result := LCase;
 end;
 
-function TELParser.ParseCaseItem(): TELASTNode;
+function TCPParser.ParseCaseItem(): TCPASTNode;
 var
-  LCaseItem: TELASTNode;
-  LCaseLabels: TELASTNode;
-  LStatementList: TELASTNode;
+  LCaseItem: TCPASTNode;
+  LCaseLabels: TCPASTNode;
+  LStatementList: TCPASTNode;
 begin
-  LCaseItem := TELASTNode.Create(astCaseStatement); // Reusing same type for case items
+  LCaseItem := TCPASTNode.Create(astCaseStatement); // Reusing same type for case items
   
   // Parse case labels
   LCaseLabels := ParseCaseLabels();
@@ -908,14 +933,14 @@ begin
   Result := LCaseItem;
 end;
 
-function TELParser.ParseCaseLabels(): TELASTNode;
+function TCPParser.ParseCaseLabels(): TCPASTNode;
 var
-  LLabels: TELASTNode;
-  LLabel: TELASTNode;
-  LRangeEnd: TELASTNode;
-  LRange: TELASTNode;
+  LLabels: TCPASTNode;
+  LLabel: TCPASTNode;
+  LRangeEnd: TCPASTNode;
+  LRange: TCPASTNode;
 begin
-  LLabels := TELASTNode.Create(astExpression); // Container for case labels
+  LLabels := TCPASTNode.Create(astExpression); // Container for case labels
   
   repeat
     // Parse case label (expression or range)
@@ -926,7 +951,7 @@ begin
     begin
       LRangeEnd := ParseExpression();
       // Create a range node
-      LRange := TELASTNode.Create(astBinaryOp, '..');
+      LRange := TCPASTNode.Create(astBinaryOp, '..');
       LRange.AddChild(LLabel);
       LRange.AddChild(LRangeEnd);
       LLabels.AddChild(LRange);
@@ -939,12 +964,12 @@ begin
   Result := LLabels;
 end;
 
-function TELParser.ParseReturnStatement(): TELASTNode;
+function TCPParser.ParseReturnStatement(): TCPASTNode;
 var
-  LReturn: TELASTNode;
-  LExpression: TELASTNode;
+  LReturn: TCPASTNode;
+  LExpression: TCPASTNode;
 begin
-  LReturn := TELASTNode.Create(astReturnStatement);
+  LReturn := TCPASTNode.Create(astReturnStatement);
   
   Consume(ttReturn, 'Expected "return"');
   
@@ -959,11 +984,11 @@ begin
   Result := LReturn;
 end;
 
-function TELParser.ParseCallStatement(): TELASTNode;
+function TCPParser.ParseCallStatement(): TCPASTNode;
 var
-  LCall: TELASTNode;
+  LCall: TCPASTNode;
 begin
-  LCall := TELASTNode.Create(astCallStatement);
+  LCall := TCPASTNode.Create(astCallStatement);
   
   LCall.AddChild(ParseExpression());
   
@@ -972,23 +997,23 @@ begin
   Result := LCall;
 end;
 
-function TELParser.ParseExpression(): TELASTNode;
+function TCPParser.ParseExpression(): TCPASTNode;
 begin
   Result := ParseConditionalExpression();
 end;
 
-function TELParser.ParseConditionalExpression(): TELASTNode;
+function TCPParser.ParseConditionalExpression(): TCPASTNode;
 var
-  LExpr: TELASTNode;
-  LThen: TELASTNode;
-  LElse: TELASTNode;
-  LTernary: TELASTNode;
+  LExpr: TCPASTNode;
+  LThen: TCPASTNode;
+  LElse: TCPASTNode;
+  LTernary: TCPASTNode;
 begin
   LExpr := ParseLogicalOrExpression();
   
   if Match(ttQuestion) then
   begin
-    LTernary := TELASTNode.Create(astBinaryOp, '?:');
+    LTernary := TCPASTNode.Create(astBinaryOp, '?:');
     LTernary.AddChild(LExpr);
     
     LThen := ParseExpression();
@@ -1005,17 +1030,17 @@ begin
     Result := LExpr;
 end;
 
-function TELParser.ParseLogicalOrExpression(): TELASTNode;
+function TCPParser.ParseLogicalOrExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
 begin
   LLeft := ParseLogicalAndExpression();
   
   while Match(ttOr) do
   begin
-    LBinOp := TELASTNode.Create(astBinaryOp, 'or');
+    LBinOp := TCPASTNode.Create(astBinaryOp, 'or');
     LBinOp.AddChild(LLeft);
     
     LRight := ParseLogicalAndExpression();
@@ -1027,17 +1052,17 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseLogicalAndExpression(): TELASTNode;
+function TCPParser.ParseLogicalAndExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
 begin
   LLeft := ParseEqualityExpression();
   
   while Match(ttAnd) do
   begin
-    LBinOp := TELASTNode.Create(astBinaryOp, 'and');
+    LBinOp := TCPASTNode.Create(astBinaryOp, 'and');
     LBinOp.AddChild(LLeft);
     
     LRight := ParseEqualityExpression();
@@ -1049,11 +1074,11 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseEqualityExpression(): TELASTNode;
+function TCPParser.ParseEqualityExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
   LOperator: string;
 begin
   LLeft := ParseRelationalExpression();
@@ -1063,7 +1088,7 @@ begin
     LOperator := FCurrentToken.Value;
     AdvanceToken();
     
-    LBinOp := TELASTNode.Create(astBinaryOp, LOperator);
+    LBinOp := TCPASTNode.Create(astBinaryOp, LOperator);
     LBinOp.AddChild(LLeft);
     
     LRight := ParseRelationalExpression();
@@ -1075,11 +1100,11 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseRelationalExpression(): TELASTNode;
+function TCPParser.ParseRelationalExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
   LOperator: string;
 begin
   LLeft := ParseAdditiveExpression();
@@ -1089,7 +1114,7 @@ begin
     LOperator := FCurrentToken.Value;
     AdvanceToken();
     
-    LBinOp := TELASTNode.Create(astBinaryOp, LOperator);
+    LBinOp := TCPASTNode.Create(astBinaryOp, LOperator);
     LBinOp.AddChild(LLeft);
     
     LRight := ParseAdditiveExpression();
@@ -1101,11 +1126,11 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseAdditiveExpression(): TELASTNode;
+function TCPParser.ParseAdditiveExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
   LOperator: string;
 begin
   LLeft := ParseMultiplicativeExpression();
@@ -1115,7 +1140,7 @@ begin
     LOperator := FCurrentToken.Value;
     AdvanceToken();
     
-    LBinOp := TELASTNode.Create(astBinaryOp, LOperator);
+    LBinOp := TCPASTNode.Create(astBinaryOp, LOperator);
     LBinOp.AddChild(LLeft);
     
     LRight := ParseMultiplicativeExpression();
@@ -1127,11 +1152,11 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseMultiplicativeExpression(): TELASTNode;
+function TCPParser.ParseMultiplicativeExpression(): TCPASTNode;
 var
-  LLeft: TELASTNode;
-  LRight: TELASTNode;
-  LBinOp: TELASTNode;
+  LLeft: TCPASTNode;
+  LRight: TCPASTNode;
+  LBinOp: TCPASTNode;
   LOperator: string;
 begin
   LLeft := ParseUnaryExpression();
@@ -1141,7 +1166,7 @@ begin
     LOperator := FCurrentToken.Value;
     AdvanceToken();
     
-    LBinOp := TELASTNode.Create(astBinaryOp, LOperator);
+    LBinOp := TCPASTNode.Create(astBinaryOp, LOperator);
     LBinOp.AddChild(LLeft);
     
     LRight := ParseUnaryExpression();
@@ -1153,18 +1178,18 @@ begin
   Result := LLeft;
 end;
 
-function TELParser.ParseUnaryExpression(): TELASTNode;
+function TCPParser.ParseUnaryExpression(): TCPASTNode;
 var
-  LUnary: TELASTNode;
+  LUnary: TCPASTNode;
   LOperator: string;
-  LOperand: TELASTNode;
+  LOperand: TCPASTNode;
 begin
   if Check(ttPlus) or Check(ttMinus) or Check(ttNot) or Check(ttAddressOf) or Check(ttPower) then
   begin
     LOperator := FCurrentToken.Value;
     AdvanceToken();
     
-    LUnary := TELASTNode.Create(astUnaryOp, LOperator);
+    LUnary := TCPASTNode.Create(astUnaryOp, LOperator);
     LOperand := ParseUnaryExpression();
     LUnary.AddChild(LOperand);
     
@@ -1175,7 +1200,7 @@ begin
     AdvanceToken();
     Consume(ttLeftParen, 'Expected "("');
     
-    LUnary := TELASTNode.Create(astUnaryOp, 'sizeof');
+    LUnary := TCPASTNode.Create(astUnaryOp, 'sizeof');
     LOperand := ParseTypeSpec();
     LUnary.AddChild(LOperand);
     
@@ -1187,13 +1212,13 @@ begin
     Result := ParsePostfixExpression();
 end;
 
-function TELParser.ParsePostfixExpression(): TELASTNode;
+function TCPParser.ParsePostfixExpression(): TCPASTNode;
 var
-  LExpr: TELASTNode;
-  LAccess: TELASTNode;
-  LIndex: TELASTNode;
-  LArgs: TELASTNode;
-  LMember: TELASTNode;
+  LExpr: TCPASTNode;
+  LAccess: TCPASTNode;
+  LIndex: TCPASTNode;
+  LArgs: TCPASTNode;
+  LMember: TCPASTNode;
 begin
   LExpr := ParsePrimaryExpression();
   
@@ -1202,7 +1227,7 @@ begin
     if Match(ttLeftBracket) then
     begin
       // Array access
-      LAccess := TELASTNode.Create(astArrayAccess);
+      LAccess := TCPASTNode.Create(astArrayAccess);
       LAccess.AddChild(LExpr);
       
       LIndex := ParseExpression();
@@ -1215,7 +1240,7 @@ begin
     else if Match(ttLeftParen) then
     begin
       // Function call
-      LAccess := TELASTNode.Create(astFunctionCall);
+      LAccess := TCPASTNode.Create(astFunctionCall);
       LAccess.AddChild(LExpr);
       
       if not Check(ttRightParen) then
@@ -1231,10 +1256,10 @@ begin
     else if Match(ttDot) then
     begin
       // Member access
-      LAccess := TELASTNode.Create(astMemberAccess);
+      LAccess := TCPASTNode.Create(astMemberAccess);
       LAccess.AddChild(LExpr);
       
-      LMember := TELASTNode.Create(astIdentifier, FCurrentToken.Value);
+      LMember := CreateIdentifierNode(FCurrentToken.Value);
       Consume(ttIdentifier, 'Expected member name');
       LAccess.AddChild(LMember);
       
@@ -1243,7 +1268,7 @@ begin
     else if Match(ttPower) then
     begin
       // Pointer dereference
-      LAccess := TELASTNode.Create(astUnaryOp, '^');
+      LAccess := TCPASTNode.Create(astUnaryOp, '^');
       LAccess.AddChild(LExpr);
       
       LExpr := LAccess;
@@ -1255,17 +1280,17 @@ begin
   Result := LExpr;
 end;
 
-function TELParser.ParsePrimaryExpression(): TELASTNode;
+function TCPParser.ParsePrimaryExpression(): TCPASTNode;
 begin
   case FCurrentToken.TokenType of
     ttIdentifier:
       begin
-        Result := TELASTNode.Create(astIdentifier, FCurrentToken.Value);
+        Result := CreateIdentifierNode(FCurrentToken.Value);
         AdvanceToken();
       end;
     ttIntegerLiteral, ttRealLiteral, ttCharLiteral, ttStringLiteral, ttTrue, ttFalse:
       begin
-        Result := TELASTNode.Create(astLiteral, FCurrentToken.Value);
+        Result := CreateLiteralNode(FCurrentToken.Value);
         AdvanceToken();
       end;
     ttLeftParen:
@@ -1275,17 +1300,17 @@ begin
         Consume(ttRightParen, 'Expected ")"');
       end;
   else
-    raise EELException.Create('Expected primary expression', [], 
+    raise ECPException.Create('Expected primary expression', [],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
   end;
 end;
 
-function TELParser.ParseArgumentList(): TELASTNode;
+function TCPParser.ParseArgumentList(): TCPASTNode;
 var
-  LArgs: TELASTNode;
-  LArg: TELASTNode;
+  LArgs: TCPASTNode;
+  LArg: TCPASTNode;
 begin
-  LArgs := TELASTNode.Create(astArgumentList);
+  LArgs := TCPASTNode.Create(astArgumentList);
   
   repeat
     LArg := ParseExpression();
@@ -1295,17 +1320,17 @@ begin
   Result := LArgs;
 end;
 
-function TELParser.ParseLValue(): TELASTNode;
+function TCPParser.ParseLValue(): TCPASTNode;
 var
-  LValue: TELASTNode;
-  LAccess: TELASTNode;
-  LIndex: TELASTNode;
-  LMember: TELASTNode;
+  LValue: TCPASTNode;
+  LAccess: TCPASTNode;
+  LIndex: TCPASTNode;
+  LMember: TCPASTNode;
 begin
   case FCurrentToken.TokenType of
     ttIdentifier:
       begin
-        LValue := TELASTNode.Create(astIdentifier, FCurrentToken.Value);
+        LValue := CreateIdentifierNode(FCurrentToken.Value);
         AdvanceToken();
       end;
     ttLeftParen:
@@ -1315,7 +1340,7 @@ begin
         Consume(ttRightParen, 'Expected ")"');
       end;
   else
-    raise EELException.Create('Expected lvalue', [], 
+    raise ECPException.Create('Expected lvalue', [],
       FCurrentToken.SourcePos.FileName, FCurrentToken.SourcePos.Line, FCurrentToken.SourcePos.Column);
   end;
   
@@ -1324,7 +1349,7 @@ begin
   begin
     if Match(ttLeftBracket) then
     begin
-      LAccess := TELASTNode.Create(astArrayAccess);
+      LAccess := TCPASTNode.Create(astArrayAccess);
       LAccess.AddChild(LValue);
       
       LIndex := ParseExpression();
@@ -1336,10 +1361,10 @@ begin
     end
     else if Match(ttDot) then
     begin
-      LAccess := TELASTNode.Create(astMemberAccess);
+      LAccess := TCPASTNode.Create(astMemberAccess);
       LAccess.AddChild(LValue);
       
-      LMember := TELASTNode.Create(astIdentifier, FCurrentToken.Value);
+      LMember := CreateIdentifierNode(FCurrentToken.Value);
       Consume(ttIdentifier, 'Expected member name');
       LAccess.AddChild(LMember);
       
@@ -1347,7 +1372,7 @@ begin
     end
     else if Match(ttPower) then
     begin
-      LAccess := TELASTNode.Create(astUnaryOp, '^');
+      LAccess := TCPASTNode.Create(astUnaryOp, '^');
       LAccess.AddChild(LValue);
       
       LValue := LAccess;

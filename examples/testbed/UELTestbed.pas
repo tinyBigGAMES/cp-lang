@@ -1,15 +1,15 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
 
- https://github.com/tinyBigGAMES/e-lang
+ https://cp-lang.org/
 
  See LICENSE file for license agreement
 ===============================================================================}
@@ -22,20 +22,20 @@ uses
   System.SysUtils,
   System.TypInfo,
   System.IOUtils,
-  ELang.Types,
-  ELang.Common,
-  ELang.Compiler,
-  ELang.Parser,
-  ELang.SourceMap,
-  ELang.Errors,
-  ELang.JIT,
-  ELang.Platform;
+  CPLang.Types,
+  CPLang.Common,
+  CPLang.Compiler,
+  CPLang.Parser,
+  CPLang.SourceMap,
+  CPLang.Errors,
+  CPLang.JIT,
+  CPLang.Platform;
 
 procedure RunTests();
 
 implementation
 
-procedure DisplayAST(const ANode: TELASTNode; const AIndent: Integer = 0);
+procedure DisplayAST(const ANode: TCPASTNode; const AIndent: Integer = 0);
 var
   LIndex: Integer;
   LIndentStr: string;
@@ -45,120 +45,117 @@ begin
 
   LIndentStr := StringOfChar(' ', AIndent * 2);
 
-  WriteLn(Format('%s%s: %s', [LIndentStr, GetEnumName(TypeInfo(TELASTNodeType), Ord(ANode.NodeType)), ANode.Value]));
+  CPPrintLn('%s%s: %s', [LIndentStr, GetEnumName(TypeInfo(TCPASTNodeType), Ord(ANode.NodeType)), ANode.Value]);
 
   for LIndex := 0 to ANode.ChildCount() - 1 do
     DisplayAST(ANode.GetChild(LIndex), AIndent + 1);
 end;
 
-procedure DisplayErrors(const ACompiler: TELCompiler);
+procedure DisplayErrors(const ACompiler: TCPCompiler);
 var
-  LErrors: TArray<TELCompilerError>;
-  LWarnings: TArray<TELCompilerError>;
-  LError: TELCompilerError;
+  LErrors: TArray<TCPCompilerError>;
+  LWarnings: TArray<TCPCompilerError>;
+  LError: TCPCompilerError;
 begin
   LErrors := ACompiler.GetErrors();
   LWarnings := ACompiler.GetWarnings();
 
   if Length(LErrors) > 0 then
   begin
-    WriteLn('=== COMPILATION ERRORS ===');
+    CPPrintLn('=== COMPILATION ERRORS ===');
     for LError in LErrors do
     begin
-      WriteLn(Format('ERROR: %s', [LError.ToString()]));
+      CPPrintLn('ERROR: %s', [LError.ToString()]);
     end;
-    WriteLn('');
+    CPPrintLn('');
   end;
 
   if Length(LWarnings) > 0 then
   begin
-    WriteLn('=== COMPILATION WARNINGS ===');
+    CPPrintLn('=== COMPILATION WARNINGS ===');
     for LError in LWarnings do
     begin
-      WriteLn(Format('WARNING: %s', [LError.ToString()]));
+      CPPrintLn(Format('WARNING: %s', [LError.ToString()]));
     end;
-    WriteLn('');
+    CPPrintLn('');
   end;
 end;
 
 procedure CompileFile(const AFileName: string);
 var
-  LCompiler: TELCompiler;
-  LResult: TELCompilationResult;
+  LCompiler: TCPCompiler;
+  LResult: TCPCompilationResult;
 begin
-  WriteLn('=== E-Lang Compiler Test ===');
-  WriteLn('');
+  CPPrintLn('=== CP-Lang Compiler Test ===');
+  CPPrintLn('');
 
   if not TFile.Exists(AFileName) then
   begin
-    WriteLn('Error: File not found: ' + AFileName);
+    CPPrintLn('Error: File not found: %s', [AFileName]);
     Exit;
   end;
 
-  LCompiler := TELCompiler.Create();
+  LCompiler := TCPCompiler.Create();
   try
     try  // ← EXCEPTION HANDLING BLOCK
-      LCompiler.OnProgress := procedure (const AProgressInfo: TELProgressInfo)
+      LCompiler.OnProgress := procedure (const AProgressInfo: TCPProgressInfo)
         begin
-          Write(Format(#13+'[%3d%%] %s - %s (%s)', [
+          CPPrint(#13+'[%3d%%] %s - %s (%s)', [
             AProgressInfo.OverallPercent,
             AProgressInfo.PhaseDescription,
             AProgressInfo.ElapsedTime,
             AProgressInfo.DetailMessage
-          ]));
+          ]);
+          CPClearToEOL();
         end;
 
-      //WriteLn('Compiling: ' + AFileName);
-      //WriteLn('');
       LResult := LCompiler.CompileFile(AFileName);
       try  // ← RESOURCE CLEANUP FOR LResult
-        writeln;
-        writeln('--- SOURCE ---');
-        writeln(LResult.MergedSource);
+        CPPrintLn('');
+        CPPrintLn('--- SOURCE ---');
+        CPPrintLn(LResult.MergedSource);
 
-        WriteLn;
-        WriteLn(Format('Phase reached: %s', [GetEnumName(TypeInfo(TELCompilationPhase), Ord(LResult.Phase))]));
-        WriteLn(Format('Success: %s', [BoolToStr(LResult.Success, True)]));
-        WriteLn(Format('Merged source: %d characters', [Length(LResult.MergedSource)]));
-        WriteLn(Format('Tokens generated: %d', [LResult.TokenCount]));
-        WriteLn(Format('Errors: %d, Warnings: %d', [LResult.ErrorCount, LResult.WarningCount]));
-        WriteLn('');
+        CPPrintLn('');
+        CPPrintLn('Phase reached: %s', [GetEnumName(TypeInfo(TCPCompilationPhase), Ord(LResult.Phase))]);
+        CPPrintLn('Success: %s', [BoolToStr(LResult.Success, True)]);
+        CPPrintLn('Merged source: %d characters', [Length(LResult.MergedSource)]);
+        CPPrintLn('Tokens generated: %d', [LResult.TokenCount]);
+        CPPrintLn('Errors: %d, Warnings: %d', [LResult.ErrorCount, LResult.WarningCount]);
+        CPPrintLn('');
 
         if LResult.Success then
         begin
-          WriteLn('=== COMPILATION SUCCESSFUL ===');
-          WriteLn('');
+          CPPrintLn('=== COMPILATION SUCCESSFUL ===');
+          CPPrintLn('');
 
-          writeln('--- IR SOURCE ---');
-          writeln(LResult.GeneratedIR);
+          CPPrintLn('--- IR SOURCE ---');
+          CPPrintLn(LResult.GeneratedIR);
 
-          WriteLn('--- JIT ---');
-          WriteLn('Exit Code: ', ELJITIRFromString(LResult.GeneratedIR));
+          CPPrintLn('--- JIT ---');
+          CPPrintLn('Exit Code: %d', [CPJITIRFromString(LResult.GeneratedIR)]);
 
-          (*
           if Assigned(LResult.AST) then
           begin
-            WriteLn('=== AST STRUCTURE ===');
+            CPPrintLn('=== AST STRUCTURE ===');
             DisplayAST(LResult.AST);
-            WriteLn('');
+            CPPrintLn('');
           end;
 
-          WriteLn('=== TYPE SYSTEM INFO ===');
-          WriteLn(Format('int32: %s (size: %d bytes)', [
+          CPPrintLn('=== TYPE SYSTEM INFO ===');
+          CPPrintLn('int32: %s (size: %d bytes)', [
             LCompiler.TypeManager.GetBasicType(btInt32).GetTypeName(),
             LCompiler.TypeManager.GetBasicType(btInt32).GetSize()
-          ]));
-          WriteLn(Format('char: %s (size: %d bytes)', [
+          ]);
+          CPPrintLn('char: %s (size: %d bytes)', [
             LCompiler.TypeManager.GetBasicType(btChar).GetTypeName(),
             LCompiler.TypeManager.GetBasicType(btChar).GetSize()
-          ]));
-          WriteLn('');
-          *)
+          ]);
+          CPPrintLn('');
         end
         else
         begin
-          WriteLn('=== COMPILATION FAILED ===');
-          WriteLn('');
+          CPPrintLn('=== COMPILATION FAILED ===');
+          CPPrintLn('');
           DisplayErrors(LCompiler);
         end;
 
@@ -167,30 +164,30 @@ begin
       end;
 
     except  // ← EXCEPTION HANDLERS COME AFTER ALL try/finally BLOCKS
-      on E: EELException do
+      on E: ECPException do
       begin
-        WriteLn('');
-        WriteLn('=== UNHANDLED COMPILATION ERROR ===');
-        WriteLn(Format('Error: %s', [E.Message]));
-        WriteLn(Format('Category: %s', [E.ErrorCategory]));
+        CPPrintLn('');
+        CPPrintLn('=== UNHANDLED COMPILATION ERROR ===');
+        CPPrintLn('Error: %s', [E.Message]);
+        CPPrintLn('Category: %s', [E.ErrorCategory]);
         if E.SourceFileName <> '' then
         begin
-          WriteLn(Format('Location: %s', [E.GetFormattedLocation()]));
+          CPPrintLn('Location: %s', [E.GetFormattedLocation()]);
           if E.ContextInfo <> '' then
-            WriteLn(Format('Context: %s', [E.ContextInfo]));
+            CPPrintLn('Context: %s', [E.ContextInfo]);
           if E.Suggestion <> '' then
-            WriteLn(Format('Suggestion: %s', [E.Suggestion]));
+            CPPrintLn('Suggestion: %s', [E.Suggestion]);
         end;
-        WriteLn('');
+        CPPrintLn('');
       end;
       on E: Exception do
       begin
-        WriteLn('');
-        WriteLn('=== INTERNAL COMPILER ERROR ===');
-        WriteLn(Format('Error: %s', [E.Message]));
-        WriteLn(Format('Type: %s', [E.ClassName]));
-        WriteLn('This indicates a bug in the compiler itself.');
-        WriteLn('');
+        CPPrintLn('');
+        CPPrintLn('=== INTERNAL COMPILER ERROR ===');
+        CPPrintLn(Format('Error: %s', [E.Message]));
+        CPPrintLn(Format('Type: %s', [E.ClassName]));
+        CPPrintLn('This indicates a bug in the compiler itself.');
+        CPPrintLn('');
       end;
     end;
 
@@ -199,40 +196,35 @@ begin
   end;
 end;
 
-
 procedure RunTests();
 begin
   try
     CompileFile('test.e');
   except
-    on E: EELException do
+    on E: ECPException do
     begin
-      WriteLn('');
-      WriteLn('=== E-LANG COMPILATION ERROR ===');
-      WriteLn(Format('Error: %s', [E.Message]));
-      WriteLn(Format('Category: %s', [E.ErrorCategory]));
+      CPPrintLn('');
+      CPPrintLn('=== E-LANG COMPILATION ERROR ===');
+      CPPrintLn(Format('Error: %s', [E.Message]));
+      CPPrintLn(Format('Category: %s', [E.ErrorCategory]));
       if E.SourceFileName <> '' then
       begin
-        WriteLn(Format('Location: %s', [E.GetFormattedLocation()]));
+        CPPrintLn(Format('Location: %s', [E.GetFormattedLocation()]));
         if E.ContextInfo <> '' then
-          WriteLn(Format('Context: %s', [E.ContextInfo]));
+          CPPrintLn(Format('Context: %s', [E.ContextInfo]));
         if E.Suggestion <> '' then
-          WriteLn(Format('Suggestion: %s', [E.Suggestion]));
+          CPPrintLn(Format('Suggestion: %s', [E.Suggestion]));
       end;
-      WriteLn('');
-      WriteLn('Press Enter to exit...');
-      ReadLn;
     end;
     on E: Exception do
     begin
-      WriteLn('Fatal system error: ' + E.Message);
-      WriteLn('Type: ' + E.ClassName);
-      WriteLn('Press Enter to exit...');
-      ReadLn;
+      CPPrintLn('Fatal system error: ' + E.Message);
+      CPPrintLn('Type: ' + E.ClassName);
+      CPPrintLn('Press Enter to exit...');
     end;
   end;
 
-  ELPause();
+  CPPause();
 end;
 
 end.

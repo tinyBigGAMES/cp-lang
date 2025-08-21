@@ -1,22 +1,22 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
 
- https://github.com/tinyBigGAMES/e-lang
+ https://cp-lang.org/
 
  See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.JIT;
+unit CPLang.JIT;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
@@ -24,15 +24,15 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
-  ELang.LLVM,
-  ELang.Resources,
-  ELang.Errors,
-  ELang.Platform,
-  ELang.Common;
+  CPLang.LLVM,
+  CPLang.Resources,
+  CPLang.Errors,
+  CPLang.Platform,
+  CPLang.Common;
 
 type
-  { TELJIT }
-  TELJIT = class(TELObject)
+  { TCPJIT }
+  TCPJIT = class
   private
     FContext: LLVMContextRef;
     FThreadSafeContext: LLVMOrcThreadSafeContextRef;
@@ -49,7 +49,7 @@ type
     function AddModuleToJIT(AModule: LLVMModuleRef): Boolean;
 
   public
-    constructor Create; override;
+    constructor Create;
     destructor Destroy; override;
 
     function ExecIRFromString(const ALLVMIR: string): Integer;
@@ -65,25 +65,25 @@ type
   end;
 
 { Routines }
-function ELJITIRFromString(const ALLVMIR: string): Integer;
-function ELJITIRFromFile(const AFilename: string): Integer;
-function ELJITIRFromModule(const AModule: LLVMModuleRef): Integer;
+function CPJITIRFromString(const ALLVMIR: string): Integer;
+function CPJITIRFromFile(const AFilename: string): Integer;
+function CPJITIRFromModule(const AModule: LLVMModuleRef): Integer;
 
 implementation
 
-function ELJITIRFromString(const ALLVMIR: string): Integer;
+function CPJITIRFromString(const ALLVMIR: string): Integer;
 begin
-  Result := TELJIT.IRFromString(ALLVMIR);
+  Result := TCPJIT.IRFromString(ALLVMIR);
 end;
 
-function ELJITIRFromFile(const AFilename: string): Integer;
+function CPJITIRFromFile(const AFilename: string): Integer;
 begin
-  Result := TELJIT.IRFromFile(AFilename);
+  Result := TCPJIT.IRFromFile(AFilename);
 end;
 
-function ELJITIRFromModule(const AModule: LLVMModuleRef): Integer;
+function CPJITIRFromModule(const AModule: LLVMModuleRef): Integer;
 begin
-  Result := TELJIT.IRFromModule(AModule);
+  Result := TCPJIT.IRFromModule(AModule);
 end;
 
 function IfThen(const ACondition: Boolean; const ATrueValue, AFalseValue: string): string;
@@ -95,7 +95,7 @@ begin
 end;
 
 { TLEJIT }
-constructor TELJIT.Create;
+constructor TCPJIT.Create;
 begin
   inherited;
 
@@ -128,14 +128,14 @@ begin
   FIsInitialized := True;
 end;
 
-destructor TELJIT.Destroy;
+destructor TCPJIT.Destroy;
 begin
   Cleanup();
 
   inherited;
 end;
 
-procedure TELJIT.Cleanup();
+procedure TCPJIT.Cleanup();
 begin
   if FLLJIT <> nil then
   begin
@@ -158,13 +158,13 @@ begin
   FIsInitialized := False;
 end;
 
-procedure TELJIT.CPVerifyModule(AModule: LLVMModuleRef);
+procedure TCPJIT.CPVerifyModule(AModule: LLVMModuleRef);
 var
   LErrorMessage: PUTF8Char;
   LDiagnostic: string;
 begin
   if AModule = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotVerifyNilModule,
       [],
       RSJITContextModuleParameterNil,
@@ -182,7 +182,7 @@ begin
     else
       LDiagnostic := RSJITModuleVerificationUnknownError;
       
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITModuleVerificationFailed,
       [],
       Format(RSJITContextModuleContainsInvalidIR, [LDiagnostic]),
@@ -191,7 +191,7 @@ begin
   end;
 end;
 
-function TELJIT.CreateLLJIT(): Boolean;
+function TCPJIT.CreateLLJIT(): Boolean;
 var
   LError: LLVMErrorRef;
   LBuilder: LLVMOrcLLJITBuilderRef;
@@ -252,7 +252,7 @@ begin
   end;
 end;
 
-function TELJIT.AddModuleToJIT(AModule: LLVMModuleRef): Boolean;
+function TCPJIT.AddModuleToJIT(AModule: LLVMModuleRef): Boolean;
 var
   LError: LLVMErrorRef;
   LThreadSafeModule: LLVMOrcThreadSafeModuleRef;
@@ -312,7 +312,7 @@ begin
   end;
 end;
 
-function TELJIT.LoadIRFromMemory(const ALLVMIR: string): Boolean;
+function TCPJIT.LoadIRFromMemory(const ALLVMIR: string): Boolean;
 var
   LMemoryBuffer: LLVMMemoryBufferRef;
   LErrorMessage: PUTF8Char;
@@ -324,7 +324,7 @@ begin
   FLastError := '';
 
   if not FIsInitialized then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotLoadNotInitialized,
       [],
       RSJITContextLLVMNotInitialized,
@@ -332,7 +332,7 @@ begin
     );
 
   if Trim(ALLVMIR) = '' then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotLoadEmptyIR,
       [],
       RSJITContextIRStringEmpty,
@@ -352,7 +352,7 @@ begin
     );
 
     if LMemoryBuffer = nil then
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITMemoryBufferCreationFailed,
         [],
         RSJITContextLLVMCreationFailed,
@@ -371,7 +371,7 @@ begin
       else
         LDiagnostic := RSJITUnknownLLVMParsingError;
         
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITParseIRFailed,
         [],
         Format(RSJITContextIRParsingFailed, [LDiagnostic]),
@@ -387,7 +387,7 @@ begin
     begin
       LLVMDisposeModule(LModule);
       // AddModuleToJIT already sets FLastError, convert to exception
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITAddModuleToJIT,
         [],
         Format(RSJITContextModuleCompilationFailed, [FLastError]),
@@ -399,10 +399,10 @@ begin
     Result := True;
 
   except
-    on EELException do
+    on ECPException do
       raise; // Re-raise ECPExceptions as-is
     on E: Exception do
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITUnexpectedErrorLoadingMemory,
         [],
         Format(RSJITExceptionDuringIRLoading, [E.Message, E.ClassName]),
@@ -411,7 +411,7 @@ begin
   end;
 end;
 
-function TELJIT.LoadIRFromFile(const AFilename: string): Boolean;
+function TCPJIT.LoadIRFromFile(const AFilename: string): Boolean;
 var
   LMemoryBuffer: LLVMMemoryBufferRef;
   LErrorMessage: PUTF8Char;
@@ -423,7 +423,7 @@ begin
   FLastError := '';
 
   if not FIsInitialized then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotLoadNotInitialized,
       [],
       RSJITContextLLVMNotInitialized,
@@ -431,7 +431,7 @@ begin
     );
 
   if Trim(AFilename) = '' then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotLoadEmptyFilename,
       [],
       RSJITContextFilenameEmpty,
@@ -439,7 +439,7 @@ begin
     );
 
   if not TFile.Exists(AFilename) then
-    raise EELException.Create(
+    raise ECPException.Create(
       Format(RSJITFileNotFound, [AFilename]),
       [AFilename],
       Format(RSJITContextFileNotExist, [AFilename]),
@@ -464,7 +464,7 @@ begin
       else
         LDiagnostic := RSJITUnknownFileReadingError;
         
-      raise EELException.Create(
+      raise ECPException.Create(
         Format(RSJITFileReadFailed, [AFilename]),
         [AFilename],
         Format(RSJITContextFileReadingFailed, [LDiagnostic]),
@@ -484,7 +484,7 @@ begin
       else
         LDiagnostic := RSJITUnknownLLVMParsingError;
         
-      raise EELException.Create(
+      raise ECPException.Create(
         Format(RSJITParseFileIRFailed, [AFilename]),
         [AFilename],
         Format(RSJITContextFileIRParsingFailed, [LDiagnostic]),
@@ -500,7 +500,7 @@ begin
     begin
       LLVMDisposeModule(LModule);
       // AddModuleToJIT already sets FLastError, convert to exception
-      raise EELException.Create(
+      raise ECPException.Create(
         Format(RSJITAddFileModuleToJIT, [AFilename]),
         [AFilename],
         Format(RSJITContextModuleCompilationFailed, [FLastError]),
@@ -512,10 +512,10 @@ begin
     Result := True;
 
   except
-    on EELException do
+    on ECPException do
       raise; // Re-raise ECPExceptions as-is
     on E: Exception do
-      raise EELException.Create(
+      raise ECPException.Create(
         Format(RSJITUnexpectedErrorLoadingFile, [AFilename]),
         [AFilename],
         Format(RSJITExceptionDuringFileLoading, [E.Message, E.ClassName]),
@@ -524,7 +524,7 @@ begin
   end;
 end;
 
-function TELJIT.ExecuteMain(): Integer;
+function TCPJIT.ExecuteMain(): Integer;
 var
   LError: LLVMErrorRef;
   LMainSymbol: LLVMOrcExecutorAddress;
@@ -535,7 +535,7 @@ begin
   FLastError := '';
 
   if FLLJIT = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotExecuteNotInitialized,
       [],
       RSJITContextJITNotInitialized,
@@ -550,7 +550,7 @@ begin
       LDiagnostic := string(UTF8String(LLVMGetErrorMessage(LError)));
       LLVMConsumeError(LError);
       
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITMainSymbolLookupFailed,
         [],
         Format(RSJITContextSymbolLookupFailed, [LDiagnostic]),
@@ -559,7 +559,7 @@ begin
     end;
 
     if LMainSymbol = 0 then
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITMainSymbolNullAddress,
         [],
         RSJITContextSymbolNullAddress,
@@ -572,10 +572,10 @@ begin
     Result := LMainFunction();
 
   except
-    on EELException do
+    on ECPException do
       raise; // Re-raise ECPExceptions as-is
     on E: Exception do
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITUnexpectedErrorDuringExecution,
         [],
         Format(RSJITExceptionDuringMainExecution, [E.Message, E.ClassName]),
@@ -584,7 +584,7 @@ begin
   end;
 end;
 
-function TELJIT.ExecIRFromString(const ALLVMIR: string): Integer;
+function TCPJIT.ExecIRFromString(const ALLVMIR: string): Integer;
 begin
   Result := -1;
 
@@ -594,7 +594,7 @@ begin
   Result := ExecuteMain();
 end;
 
-function TELJIT.ExecIRFromFile(const AFilename: string): Integer;
+function TCPJIT.ExecIRFromFile(const AFilename: string): Integer;
 begin
   Result := -1;
 
@@ -605,15 +605,15 @@ begin
 end;
 
 // Convenience class methods with enhanced error handling
-class function TELJIT.IRFromString(const ALLVMIR: string): Integer;
+class function TCPJIT.IRFromString(const ALLVMIR: string): Integer;
 var
-  LJit: TELJIT;
+  LJit: TCPJIT;
 begin
-  LJit := TELJIT.Create;
+  LJit := TCPJIT.Create;
   try
     // Check initialization before proceeding
     if not LJit.IsInitialized then
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITInitializationFailed,
         [],
         RSJITContextLLVMNotInitialized,
@@ -627,15 +627,15 @@ begin
   end;
 end;
 
-class function TELJIT.IRFromFile(const AFilename: string): Integer;
+class function TCPJIT.IRFromFile(const AFilename: string): Integer;
 var
-  LJit: TELJIT;
+  LJit: TCPJIT;
 begin
-  LJit := TELJIT.Create;
+  LJit := TCPJIT.Create;
   try
     // Check initialization before proceeding
     if not LJit.IsInitialized then
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITInitializationFailed,
         [],
         RSJITContextLLVMNotInitialized,
@@ -649,12 +649,12 @@ begin
   end;
 end;
 
-function TELJIT.ExecIRFromModule(const AModule: LLVMModuleRef): Integer;
+function TCPJIT.ExecIRFromModule(const AModule: LLVMModuleRef): Integer;
 begin
   FLastError := '';
 
   if not FIsInitialized then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotExecuteNotInitialized2,
       [],
       RSJITContextLLVMNotInitialized,
@@ -662,7 +662,7 @@ begin
     );
 
   if AModule = nil then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITCannotExecuteModuleNil,
       [],
       RSJITContextModuleParameterNil,
@@ -674,7 +674,7 @@ begin
 
   // Add module to JIT
   if not AddModuleToJIT(AModule) then
-    raise EELException.Create(
+    raise ECPException.Create(
       RSJITAddModuleToJIT,
       [],
       Format(RSJITContextModuleCompilationFailed, [FLastError]),
@@ -685,15 +685,15 @@ begin
   Result := ExecuteMain();
 end;
 
-class function TELJIT.IRFromModule(const AModule: LLVMModuleRef): Integer;
+class function TCPJIT.IRFromModule(const AModule: LLVMModuleRef): Integer;
 var
-  LJit: TELJIT;
+  LJit: TCPJIT;
 begin
-  LJit := TELJIT.Create;
+  LJit := TCPJIT.Create;
   try
     // Check initialization before proceeding
     if not LJit.IsInitialized then
-      raise EELException.Create(
+      raise ECPException.Create(
         RSJITInitializationFailed,
         [],
         RSJITContextLLVMNotInitialized,

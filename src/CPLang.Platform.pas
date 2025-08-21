@@ -1,79 +1,73 @@
 ﻿{===============================================================================
-   ___    _
-  | __|__| |   __ _ _ _  __ _ ™
-  | _|___| |__/ _` | ' \/ _` |
-  |___|  |____\__,_|_||_\__, |
-                        |___/
+              _
+  __ _ __ ___| |__ _ _ _  __ _ ™
+ / _| '_ \___| / _` | ' \/ _` |
+ \__| .__/   |_\__,_|_||_\__, |
+    |_|                  |___/
     C Power | Pascal Clarity
 
  Copyright © 2025-present tinyBigGAMES™ LLC
  All Rights Reserved.
 
- https://github.com/tinyBigGAMES/e-lang
+ https://cp-lang.org/
 
  See LICENSE file for license agreement
 ===============================================================================}
 
-unit ELang.Platform;
+unit CPLang.Platform;
 
-{$I ELang.Defines.inc}
+{$I CPLang.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
-  ELang.Resources,
+  CPLang.Resources,
   {$IF DEFINED(MSWINDOWS) AND DEFINED(CPUX64)}
   WinApi.Windows,
   {$ENDIF}
-  ELang.LLVM;
+  CPLang.LLVM;
 
 type
-  { TELLLVMPlatformTarget }
-  TELLLVMPlatformTarget = (
+  { TCPLLVMPlatformTarget }
+  TCPLLVMPlatformTarget = (
     ptX86_64,      // x86-64 (AMD64/Intel 64)
     ptAArch64,     // ARM 64-bit
     ptWebAssembly, // WebAssembly target
     ptRISCV        // RISC-V 64-bit
   );
 
-  { TELLLVMPlatformInitResult }
-  TELLLVMPlatformInitResult = record
+  { TCPLLVMPlatformInitResult }
+  TCPLLVMPlatformInitResult = record
     Success: Boolean;
     ErrorMessage: string;
-    PlatformTarget: TELLLVMPlatformTarget;
+    PlatformTarget: TCPLLVMPlatformTarget;
     TargetTriple: string;
     DataLayout: string;
   end;
 
-// LLVM
-function  ELIsLLVMPlatformInitialized(): Boolean;
-function  ELGetLLVMPlatformTargetTriple(): string;
-function  ELGetLLVMPlatformDataLayout(): string;
-function  ELGetLLVMPlatformTarget(): TELLLVMPlatformTarget;
-function  ELGetLLVMPlatformInitResult(): TELLLVMPlatformInitResult;
+{ LLVM }
+function  CPIsLLVMPlatformInitialized(): Boolean;
+function  CPGetLLVMPlatformTargetTriple(): string;
+function  CPGetLLVMPlatformDataLayout(): string;
+function  CPGetLLVMPlatformTarget(): TCPLLVMPlatformTarget;
+function  CPGetLLVMPlatformInitResult(): TCPLLVMPlatformInitResult;
 
-// Console
-procedure ELInitConsole();
-function  ELHasConsole(): Boolean;
-function  ELPrint(const AText: string): string; overload;
-function  ELPrint(const AText: string; const AArgs: array of const): string; overload;
-function  ELPrintLn(const AText: string): string; overload;
-function  ELPrintLn(const AText: string; const AArgs: array of const): string; overload;
-procedure ELPause();
+{ Console }
+function CPHasConsole(): Boolean;
 
-// String
-function  ELAsUTF8(const AText: string): Pointer;
+{/ Strings }
+function  CPAsUTF8(const AText: string): Pointer;
 
 implementation
 
 var
   // Global initialization state
   GPlatformInitialized: Boolean = False;
-  GPlatformInitResult: TELLLVMPlatformInitResult;
+  GPlatformInitResult: TCPLLVMPlatformInitResult;
   GMarshaller: TMarshaller;
 
-function CPInitLLVMPlatform(): TELLLVMPlatformInitResult;
+function CPInitLLVMPlatform(): TCPLLVMPlatformInitResult;
 var
   LContext: LLVMContextRef;
   LModule: LLVMModuleRef;
@@ -183,17 +177,17 @@ begin
   end;
 end;
 
-function ELGetLLVMPlatformTargetTriple(): string;
+function CPGetLLVMPlatformTargetTriple(): string;
 begin
   Result := GPlatformInitResult.TargetTriple;
 end;
 
-function ELGetLLVMPlatformDataLayout(): string;
+function CPGetLLVMPlatformDataLayout(): string;
 begin
   Result := GPlatformInitResult.DataLayout;
 end;
 
-function ELGetLLVMPlatformTarget(): TELLLVMPlatformTarget;
+function CPGetLLVMPlatformTarget(): TCPLLVMPlatformTarget;
 begin
   {$IF DEFINED(MSWINDOWS) AND (DEFINED(CPUX64) OR DEFINED(CPUX86))}
     Result := ptX86_64;
@@ -229,7 +223,8 @@ end;
   end;
 {$ENDIF}
 
-procedure ELInitConsole();
+{ Console }
+procedure CPInitConsole();
 begin
   {$IF DEFINED(MSWINDOWS) AND DEFINED(CPUX64)}
     EnableVirtualTerminalProcessing();
@@ -238,60 +233,25 @@ begin
   {$ENDIF}
 end;
 
-function ELHasConsole(): Boolean;
+function CPHasConsole(): Boolean;
 begin
   {$IF DEFINED(MSWINDOWS) AND DEFINED(CPUX64)}
   Result := Boolean(GetConsoleWindow() <> 0);
   {$ENDIF}
 end;
 
-function ELPrint(const AText: string): string;
-begin
-  if not ELHasConsole() then Exit;
-  Result := AText;
-  Write(Result);
-end;
-
-function ELPrint(const AText: string; const AArgs: array of const): string;
-begin
-  if not ELHasConsole() then Exit;
-  Result := Format(AText, AArgs);
-  Write(Result);
-end;
-
-function ELPrintLn(const AText: string): string;
-begin
-  if not ELHasConsole() then Exit;
-  Result := AText;
-  WriteLn(Result);
-end;
-
-function  ELPrintLn(const AText: string; const AArgs: array of const): string;
-begin
-  if not ELHasConsole() then Exit;
-  Result := Format(AText, AArgs);
-  WriteLn(Result);
-end;
-
-procedure ELPause();
-begin
-  ELPrintLn('');
-  ELPrint('Press ENTER to continue...');
-  ReadLn;
-  ELPrintLn('');
-end;
-
-function ELIsLLVMPlatformInitialized(): Boolean;
+function CPIsLLVMPlatformInitialized(): Boolean;
 begin
   Result := GPlatformInitialized;
 end;
 
-function ELGetLLVMPlatformInitResult(): TELLLVMPlatformInitResult;
+function CPGetLLVMPlatformInitResult(): TCPLLVMPlatformInitResult;
 begin
   Result := GPlatformInitResult;
 end;
 
-function  ELAsUTF8(const AText: string): Pointer;
+{ Strings }
+function  CPAsUTF8(const AText: string): Pointer;
 begin
   Result := GMarshaller.AsUtf8(AText).ToPointer;
 end;
@@ -304,7 +264,7 @@ initialization
 
   // Initialize console only for console applications
   {$IF DEFINED(CONSOLE)}
-  ELInitConsole();
+  CPInitConsole();
   {$ENDIF}
 
 end.
