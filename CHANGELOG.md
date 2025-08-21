@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Repo Update** (2025-08-21 – jarroddavis68)
+  Complete E-Lang to CP-Lang refactor and compiler implementation
+  - Rebranded entire project from E-Lang to CP-Lang
+  - Changed all unit names from ELang to CPLang prefix
+  - Updated copyright to tinyBigGAMES LLC 2025-present
+  - New project identity C Power Pascal Clarity
+  - Website changed to https://cp-lang.org/
+  - Implemented complete lexical analyzer in CPLang.Lexer.pas
+  - Added comprehensive parser in CPLang.Parser.pas
+  - Built full semantic analysis system in CPLang.Semantic.pas
+  - Created complete type system in CPLang.Types.pas
+  - Added LLVM integration and code generation
+  - Implemented include system with preprocessor directives
+  - Built comprehensive error handling and reporting
+  - Added symbol table management
+  - Created platform abstraction layer
+  - Implemented compiler orchestration with progress reporting
+  - Language supports C99 syntax with Pascal keywords
+  - Mandatory main function requirement
+  - Variable declarations with initialization
+  - Functions and procedures with external linking
+  - Record types and arrays
+  - Full control flow statements
+  - Expression evaluation with operator precedence
+  - Preprocessor directives support
+  - 18 Pascal units plus 1 include file
+  - Targets 64-bit platforms Windows Linux macOS
+  - Requires Delphi 12 or higher
+  - Professional compiler architecture with multi-phase compilation
+
 - **Repo Update** (2025-08-20 – jarroddavis68)
   E-Lang is the experimental baby cousin to CPascal - a testing ground for features,
   ideas, and concepts before they mature into the main language.
