@@ -618,8 +618,9 @@ begin
         TCPCompilerError.Create(
           E.Message,
           'Include',
-          AMainFileName,
-          0, 0,
+          E.SourceFileName,
+          E.LineNumber,
+          E.ColumnNumber,
           esError
         )
       );

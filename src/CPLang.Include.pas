@@ -40,7 +40,7 @@ type
     FMergedSource: string;
     
     function ProcessFile(const AFileName: string; var ACurrentCharPos: Integer): string;
-    function ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean): string;
+    function ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean; const ASourceFile: string; const ALineNumber: Integer): string;
     function IsAlreadyIncluded(const AFileName: string): Boolean;
     function ValidateAngleBracketInclude(const AInclude: string): Boolean;
     
@@ -125,7 +125,7 @@ begin
     
   // Must have .e extension
   LFileName := AInclude.ToLower();
-  if not LFileName.EndsWith('.e') then
+  if not LFileName.EndsWith(CPSourceFileExt) then
     Exit;
     
   // Must be a valid filename (not empty after removing extension)
@@ -166,7 +166,7 @@ begin
   Result := '';
   
   if not TFile.Exists(AFileName) then
-    raise ECPException.Create('Include file not found: %s', [AFileName]);
+    raise ECPException.Create('File not found: %s', [AFileName]);
     
   if IsAlreadyIncluded(AFileName) then
     Exit; // Prevent circular includes
@@ -207,7 +207,7 @@ begin
         AddIncludePath(LIncludePath);
       end
       else
-        raise ECPException.Create('Invalid #includepath directive: path must be enclosed in quotes');
+        raise ECPException.Create('Invalid #includepath directive: path must be enclosed in quotes', [], LFullPath, LLineIndex + 1, 1);
       
       // After includepath, prepare for next content block
       LContentStartPos := ACurrentCharPos;
@@ -233,7 +233,7 @@ begin
       begin
         // Quoted include - allows paths, relative resolution
         LIncludePath := LLine.Substring(1, LLine.Length - 2);
-        LIncludeFile := ResolveIncludePath(LIncludePath, False);
+        LIncludeFile := ResolveIncludePath(LIncludePath, False, LFullPath, LLineIndex + 1);
         LIncludeContent := ProcessFile(LIncludeFile, ACurrentCharPos);
         Result := Result + LIncludeContent;
       end
@@ -243,14 +243,14 @@ begin
         LIncludePath := LLine.Substring(1, LLine.Length - 2);
         
         if not ValidateAngleBracketInclude(LIncludePath) then
-          raise ECPException.Create('Invalid angle bracket include "%s": must be filename.e format only (no paths)', [LIncludePath]);
+          raise ECPException.Create('Invalid angle bracket include "%s": must be filename.e format only (no paths)', [LIncludePath], LFullPath, LLineIndex + 1, 1);
           
-        LIncludeFile := ResolveIncludePath(LIncludePath, True);
+        LIncludeFile := ResolveIncludePath(LIncludePath, True, LFullPath, LLineIndex + 1);
         LIncludeContent := ProcessFile(LIncludeFile, ACurrentCharPos);
         Result := Result + LIncludeContent;
       end
       else
-        raise ECPException.Create('Invalid #include directive: must be "filename" or <filename>');
+        raise ECPException.Create('Invalid #include directive: must be "filename" or <filename>', [], LFullPath, LLineIndex + 1, 1);
       
       // After include, prepare for next content block
       LContentStartPos := ACurrentCharPos;
@@ -280,7 +280,7 @@ begin
   end;
 end;
 
-function TCPIncludeManager.ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean): string;
+function TCPIncludeManager.ResolveIncludePath(const AIncludePath: string; const AIsAngleBracket: Boolean; const ASourceFile: string; const ALineNumber: Integer): string;
 var
   LSearchPaths: string;
   LIndex: Integer;
@@ -289,7 +289,7 @@ begin
   begin
     // Angle bracket include - search in include paths only
     if FIncludePaths.Count = 0 then
-      raise ECPException.Create('No include paths configured for angle bracket include: <%s>', [AIncludePath]);
+      raise ECPException.Create('No include paths configured for angle bracket include: <%s>', [AIncludePath], ASourceFile, ALineNumber, 1);
     
     // Build semicolon-separated search paths for FileSearch
     LSearchPaths := '';
@@ -302,7 +302,7 @@ begin
     
     Result := FileSearch(AIncludePath, LSearchPaths);
     if Result = '' then
-      raise ECPException.Create('Cannot find angle bracket include <%s> in configured include paths', [AIncludePath]);
+      raise ECPException.Create('Cannot find angle bracket include <%s> in configured include paths', [AIncludePath], ASourceFile, ALineNumber, 1);
   end
   else
   begin
@@ -319,7 +319,7 @@ begin
       Exit;
     end;
     
-    raise ECPException.Create('Cannot resolve include path: %s', [AIncludePath]);
+    raise ECPException.Create('Cannot resolve include path: %s', [AIncludePath], ASourceFile, ALineNumber, 1);
   end;
 end;
 

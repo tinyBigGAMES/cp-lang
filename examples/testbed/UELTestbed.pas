@@ -89,12 +89,6 @@ begin
   CPPrintLn('=== CP-Lang Compiler Test ===');
   CPPrintLn('');
 
-  if not TFile.Exists(AFileName) then
-  begin
-    CPPrintLn('Error: File not found: %s', [AFileName]);
-    Exit;
-  end;
-
   LCompiler := TCPCompiler.Create();
   try
     try  // ← EXCEPTION HANDLING BLOCK
@@ -111,9 +105,12 @@ begin
 
       LResult := LCompiler.CompileFile(AFileName);
       try  // ← RESOURCE CLEANUP FOR LResult
-        CPPrintLn('');
-        CPPrintLn('--- SOURCE ---');
-        CPPrintLn(LResult.MergedSource);
+        if not LResult.MergedSource.IsEmpty then
+        begin
+          CPPrintLn('');
+          CPPrintLn('--- SOURCE ---');
+          CPPrintLn(LResult.MergedSource);
+        end;
 
         CPPrintLn('');
         CPPrintLn('Phase reached: %s', [GetEnumName(TypeInfo(TCPCompilationPhase), Ord(LResult.Phase))]);
@@ -199,7 +196,7 @@ end;
 procedure RunTests();
 begin
   try
-    CompileFile('test.e');
+    CompileFile('test.cp');
   except
     on E: ECPException do
     begin

@@ -25,6 +25,9 @@ uses
   System.SysUtils,
   CPLang.Platform;
 
+const
+  CPSourceFileExt = '.cp';
+
 { Console }
 procedure CPClearToEOL();
 function  CPPrint(const AText: string): string; overload;
