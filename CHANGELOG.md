@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Repo Update** (2025-08-21 – jarroddavis68)
+  - Forgot to add math.e
+
+- **Repo Update** (2025-08-21 – jarroddavis68)
   Complete E-Lang to CP-Lang refactor and compiler implementation
   - Rebranded entire project from E-Lang to CP-Lang
   - Changed all unit names from ELang to CPLang prefix
