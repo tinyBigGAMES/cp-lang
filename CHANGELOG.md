@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Fix: Add line/column numbers to include processing errors** (2025-08-21 – jarroddavis68)
+  - Updated ResolveIncludePath to accept source file and line number parameters
+  - Enhanced all include error exceptions to include proper source position
+  - Fixed compiler exception handler to extract line/column from ECPException
+  - Include errors now show exact file, line, and column where directive appears
+  Resolves missing line numbers in include processing error output.
+  Before: ERROR: Cannot resolve include path: math.e (no location)
+  After: ERROR: Cannot resolve include path: math.e
+  File: test.cp
+  Line: 5, Column: 1
+
 - **Repo Update** (2025-08-21 – jarroddavis68)
   - Forgot to add math.e
 
